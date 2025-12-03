@@ -1272,39 +1272,56 @@
     ];
 
     // ========== 추천 로직 ==========
-    function recommendMajor(){
-      const interest = document.getElementById('interest').value;
-      const activity = document.getElementById('activity').value;
-      const subject = document.getElementById('subject').value;
-      const experience = document.getElementById('experience').value;
+function recommendMajor(){
+  const interest = document.getElementById('interest').value;
+  const activity = document.getElementById('activity').value;
+  const subject = document.getElementById('subject').value;
+  const experience = document.getElementById('experience').value;
 
-      if(!interest || !activity || !subject){
-        document.getElementById('results').innerHTML =
-          '<p class="hint" style="color:#d65d5d">⚠️ 1~3번 필수 항목을 모두 선택하세요.</p>';
-        return;
-      }
+  if(!interest || !activity || !subject){
+    document.getElementById('results').innerHTML =
+      '<p class="hint">⚠️ 1~3번 필수 항목을 모두 선택하세요.</p>';
+    return;
+  }
 
-      // 점수 계산 (관심 4, 활동 3, 과목 3, 경험 1)
-      const scored = majorDB.map(m=>{
-        let score = 0;
-        if(m.interest && m.interest.includes(interest)) score += 4;
-        if(m.activity && m.activity.includes(activity)) score += 3;
-        if(m.subject && m.subject.includes(subject)) score += 3;
-        if(experience && m.experience && m.experience.includes(experience)) score += 1;
-        // 소규모 보정: 전공 이름에 관심 키워드 포함 시 +1
-        if(m.name.toLowerCase().includes(interest)) score += 1;
-        return {...m,score};
-      });
+  const scored = majorDB.map(m => {
+    let score = 0;
+    if(m.interest.includes(interest)) score += 3;
+    if(m.activity.includes(activity)) score += 2;
+    if(m.subject.includes(subject)) score += 2;
+    if(experience && m.experience.includes(experience)) score += 1;
 
-      scored.sort((a,b)=>b.score - a.score);
+    // 🔥 동점 방지 가중치
+    const interestMatches = m.interest.filter(i => i === interest).length;
+    if(interestMatches > 1) score += 0.8;
 
-      const top = scored.filter(s=>s.score>0).slice(0,5);
+    if(m.activity[0] === activity) score += 0.5;
 
-      if(top.length === 0){
-        document.getElementById('results').innerHTML =
-          '<p class="hint">추천할 학과가 없습니다. 선택지를 바꿔 다시 시도해보세요.</p>';
-        return;
-      }
+    if(m.subject[0] === subject) score += 0.4;
+
+    return {...m, score};
+  });
+
+  scored.sort((a,b) => b.score - a.score);
+  const top = scored.slice(0, 3);
+
+  let out = '';
+  top.forEach(m => {
+    const percent = Math.round((m.score / 8.7) * 100);
+    out += `
+    <div class="major-card">
+      <div class="major-title">${m.name} — <span style="color:#4b7bec">${percent}% 일치</span></div>
+      <div class="major-desc">
+        ${m.desc}<br>
+        <strong>핵심 요약:</strong> ${m.summary}<br>
+        <strong>필요 역량:</strong> ${m.skills}<br>
+        <strong>관련 진로:</strong> ${m.jobs}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('results').innerHTML = out;
+}
 
       // 출력: 카드형 (요약/직무/스킬)
       let out = '';
