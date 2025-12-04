@@ -1,122 +1,131 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AI 기반 학과 추천 시스템 — 카드형 결과</title>
+  <meta charset="UTF-8">
+  <title>학과 추천 시스템</title>
   <style>
-    :root{
-      --bg:#f4f6fa; --card:#fff; --primary:#3d6aff; --muted:#6b7280;
-      --accent:#e9efff;
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background: #eef3ff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-    body{font-family: Pretendard, system-ui, Arial; background:var(--bg); margin:0; padding:36px; color:#222}
-    .wrap{max-width:1100px;margin:0 auto}
-    h1{text-align:center;font-size:28px;margin-bottom:18px;color:#1f2b6c}
-    .container{background:var(--card);padding:24px;border-radius:14px;box-shadow:0 8px 28px rgba(18,35,80,0.06)}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    label{display:block;font-weight:700;margin-bottom:6px}
-    select{width:100%;padding:10px;border-radius:10px;border:1px solid #dfe7fb;background:#fbfdff;font-size:15px}
-    .controls{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
-    button{padding:12px 16px;border-radius:10px;border:0;background:var(--primary);color:#fff;font-weight:700;cursor:pointer}
-    .reset{background:#ff6b6b}
-    .hint{color:var(--muted);font-size:13px;margin-top:10px}
-    #results{margin-top:22px; display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
-    @media(max-width:900px){.row{grid-template-columns:1fr} #results{grid-template-columns:1fr}}
-    .major-card{background:var(--card);border-radius:12px;padding:16px;border:1px solid #eef3ff;box-shadow:0 6px 18px rgba(20,32,66,0.02)}
-    .major-title{font-size:18px;font-weight:800;color:var(--primary)}
-    .major-desc{margin-top:8px;color:#333;line-height:1.45}
-    .meta{margin-top:10px;font-size:13px;color:var(--muted)}
-    .tags{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
-    .tag{background:var(--accent);padding:6px 8px;border-radius:8px;font-weight:700;color:var(--primary);font-size:12px}
-    .section{margin-top:10px;padding-top:8px;border-top:1px dashed #eef4ff}
-    .section p{margin:6px 0;color:#2b2b2b;font-size:14px;line-height:1.45}
-    .small{font-size:13px;color:var(--muted)}
-    .footer-note{margin-top:14px;font-size:13px;color:var(--muted)}
-    .score-badge{float:right;background:#f1f6ff;color:var(--primary);padding:6px 8px;border-radius:8px;font-weight:800;font-size:13px}
+
+    .container {
+      background: #ffffff;
+      width: 420px;
+      border-radius: 18px;
+      padding: 30px;
+      box-shadow: 0px 7px 20px rgba(0,0,0,0.1);
+      animation: fade 0.4s;
+    }
+
+    @keyframes fade {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    h2 { text-align: center; margin-bottom: 25px; }
+
+    .options button {
+      width: 100%;
+      margin: 7px 0;
+      padding: 13px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      background: #e7ecff;
+      transition: 0.25s;
+      font-size: 16px;
+    }
+    .options button:hover {
+      transform: translateY(-3px);
+      background: #d6e0ff;
+    }
+
+    .controls { text-align: center; margin-top: 20px; }
+    .controls button {
+      padding: 10px 22px;
+      margin: 0 5px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #567aff;
+      color: white;
+      font-size: 15px;
+      transition: 0.25s;
+    }
+    .controls button:hover { background: #3c5ce5; }
+
+    .major-card {
+      border: 2px solid #567aff;
+      border-radius: 14px;
+      padding: 18px;
+      background: #f7f9ff;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>AI 기반 학과 추천 시스템</h1>
-    <div class="container">
-      <div class="row">
-        <div>
-          <label for="interest">1. 가장 흥미로운 분야</label>
-          <select id="interest">
-            <option value="">-- 선택하세요 --</option>
-            <option value="ai">인공지능 / 데이터</option>
-            <option value="software">소프트웨어 개발</option>
-            <option value="robot">로봇 / 기계 / 메카트로닉스</option>
-            <option value="electronic">전자·전기 / 반도체</option>
-            <option value="biology">생명과학 / 바이오 / 의학</option>
-            <option value="chemistry">화학 / 재료</option>
-            <option value="design">디자인 / 미디어 / 예술</option>
-            <option value="business">경영 / 경제 / 금융</option>
-            <option value="social">인문 / 사회 / 교육</option>
-            <option value="env">환경 / 에너지 / 해양</option>
-          </select>
-        </div>
 
-        <div>
-          <label for="activity">2. 선호하는 활동 유형</label>
-          <select id="activity">
-            <option value="">-- 선택하세요 --</option>
-            <option value="analysis">데이터 분석, 논리적 사고</option>
-            <option value="build">만들기, 제작, 설계 활동</option>
-            <option value="experiment">실험 / 연구 활동</option>
-            <option value="creative">창의적 작업 / 콘텐츠 제작</option>
-            <option value="management">기획 / 경영 / 전략</option>
-            <option value="practical">실습 / 임상 / 현장</option>
-            <option value="teaching">교육 / 강의</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="subject">3. 가장 자신 있는 과목</label>
-          <select id="subject">
-            <option value="">-- 선택하세요 --</option>
-            <option value="math">수학</option>
-            <option value="physics">물리</option>
-            <option value="chemistry">화학</option>
-            <option value="bio">생명과학</option>
-            <option value="cs">정보 / 컴퓨터</option>
-            <option value="art">미술 / 디자인</option>
-            <option value="econ">경제</option>
-            <option value="korean">국어 / 문학</option>
-            <option value="soc">사회 / 역사</option>
-          </select>
-        </div>
-
-        <div>
-          <label for="experience">4. 추가 선호(선택)</label>
-          <select id="experience">
-            <option value="">-- 선택 (없음) --</option>
-            <option value="research">연구 / 학술</option>
-            <option value="industry">산업 / 실무</option>
-            <option value="startup">창업 / 스타트업</option>
-            <option value="teaching">교육 / 강의</option>
-            <option value="public">공공 / 행정</option>
-          </select>
-        </div>
-
-        <div class="full" style="grid-column:1/-1">
-          <p class="hint">1~3번 필수 항목을 선택한 뒤 '추천 받기'를 눌러주세요. 추천은 최대 5개까지 카드형으로 표시됩니다.</p>
-        </div>
-      </div>
-
-      <div class="controls">
-        <button onclick="recommendMajor()">학과 추천 받기</button>
-        <button class="reset" onclick="resetForm()">다시 하기</button>
-      </div>
-
-      <div id="results"></div>
-      <div class="footer-note">참고: 이 추천은 간단한 매칭 기반이며, 진로 선택 시에는 실제 강의계획서·대학정보·진로상담을 함께 확인하세요.</div>
+  <div class="container" id="page">
+    <!-- 첫 페이지 -->
+    <h2>좋아하는 과목을 선택하세요</h2>
+    <div class="options" id="subjectPage">
+      <button onclick="selectAnswer('subject','econ')">경제</button>
+      <button onclick="selectAnswer('subject','math')">수학</button>
+      <button onclick="selectAnswer('subject','cs')">정보/컴퓨터</button>
+    </div>
+    <div class="controls">
+      <button onclick="nextPage()">다음 ></button>
     </div>
   </div>
 
-  <script>
-    // ========== majorDB: B 스타일(요약 2줄 / 직무 3~4 / 스킬 6~8) ==========
-    const majorDB = [
+<script>
+  let answers = {};
+  let pageIndex = 0;
+
+  const pages = [
+    {
+      question: "좋아하는 과목을 선택하세요",
+      key: "subject",
+      options: [
+        {label: "경제", value: "econ"},
+        {label: "수학", value: "math"},
+        {label: "정보/컴퓨터", value: "cs"}
+      ]
+    },
+    {
+      question: "관심 있는 분야를 선택하세요",
+      key: "interest",
+      options: [
+        {label: "AI", value: "ai"},
+        {label: "Software", value: "software"},
+        {label: "경영/비즈니스", value: "business"}
+      ]
+    },
+    {
+      question: "선호하는 활동을 선택하세요",
+      key: "activity",
+      options: [
+        {label: "데이터 분석", value: "analysis"},
+        {label: "무언가 개발·제작", value: "build"}
+      ]
+    },
+    {
+      question: "희망 경험을 선택하세요",
+      key: "experience",
+      options: [
+        {label: "산업 현장 경험", value: "industry"},
+        {label: "스타트업·창업", value: "startup"}
+      ]
+    }
+  ];
+
+  const majorDB = [
       /* AI · 컴퓨터 · 데이터 */
       {
         name:'인공지능학과',
@@ -1270,75 +1279,51 @@
       }
     ];
 
-    // ========== 추천 로직 ==========
-    function recommendMajor(){
-      const interest = document.getElementById('interest').value;
-      const activity = document.getElementById('activity').value;
-      const subject = document.getElementById('subject').value;
-      const experience = document.getElementById('experience').value;
+  function selectAnswer(key, value) {
+    answers[key] = value;
+  }
 
-      if(!interest || !activity || !subject){
-        document.getElementById('results').innerHTML =
-          '<p class="hint" style="color:#d65d5d">⚠️ 1~3번 필수 항목을 모두 선택하세요.</p>';
-        return;
-      }
-
-      // 점수 계산 (관심 4, 활동 3, 과목 3, 경험 1)
-      const scored = majorDB.map(m=>{
-        let score = 0;
-        if(m.interest && m.interest.includes(interest)) score += 4;
-        if(m.activity && m.activity.includes(activity)) score += 3;
-        if(m.subject && m.subject.includes(subject)) score += 3;
-        if(experience && m.experience && m.experience.includes(experience)) score += 1;
-        // 소규모 보정: 전공 이름에 관심 키워드 포함 시 +1
-        if(m.name.toLowerCase().includes(interest)) score += 1;
-        return {...m,score};
-      });
-
-      scored.sort((a,b)=>b.score - a.score);
-
-      const top = scored.filter(s=>s.score>0).slice(0,5);
-
-      if(top.length === 0){
-        document.getElementById('results').innerHTML =
-          '<p class="hint">추천할 학과가 없습니다. 선택지를 바꿔 다시 시도해보세요.</p>';
-        return;
-      }
-
-      // 출력: 카드형 (요약/직무/스킬)
-      let out = '';
-      top.forEach(m=>{
-        const pct = Math.min(100, Math.round((m.score/12)*100)); // 단순 백분율 환산
-        out += `
-          <div class="major-card">
-            <div style="display:flex;align-items:flex-start;gap:8px">
-              <div class="major-title">${m.name}</div>
-              <div class="score-badge">${pct}%</div>
-            </div>
-            <div class="major-desc">${m.desc}</div>
-            <div class="tags">
-              ${m.interest.map(t=>`<div class="tag">${t}</div>`).join(' ')}
-              ${m.activity.map(t=>`<div class="tag">${t}</div>`).join(' ')}
-            </div>
-            <div class="section">
-              <p><strong>요약:</strong> ${m.summary || '학과 요약 정보'}</p>
-              <p><strong>취업/진로:</strong> ${m.jobs || '관련 분야로 진출'}</p>
-              <p><strong>필요 기술/역량:</strong> ${m.skills || '핵심 기술/역량'}</p>
-            </div>
-          </div>
-        `;
-      });
-
-      document.getElementById('results').innerHTML = out;
+  function nextPage() {
+    if (!answers[pages[pageIndex].key]) {
+      alert("하나 선택해주세요!");
+      return;
     }
+    pageIndex++;
 
-    function resetForm(){
-      document.getElementById('interest').value = '';
-      document.getElementById('activity').value = '';
-      document.getElementById('subject').value = '';
-      document.getElementById('experience').value = '';
-      document.getElementById('results').innerHTML = '';
+    if (pageIndex >= pages.length) {
+      showResult();
+      return;
     }
-  </script>
+    renderPage();
+  }
+
+  function renderPage() {
+    const page = pages[pageIndex];
+    let html = `<h2>${page.question}</h2><div class="options">`;
+    page.options.forEach(o => {
+      html += `<button onclick="selectAnswer('${page.key}','${o.value}')">${o.label}</button>`;
+    });
+    html += `</div><div class="controls"><button onclick="nextPage()">다음 ></button></div>`;
+    document.getElementById("page").innerHTML = html;
+  }
+
+  function showResult() {
+    const result = majors[0]; // (핀테크만 존재하므로 바로 매칭)
+    document.getElementById("page").innerHTML = `
+      <h2>추천 학과 결과</h2>
+      <div class="major-card">
+        <h3>${result.name}</h3>
+        <p>${result.summary}</p>
+        <p><b>활동 분야:</b> ${result.desc}</p>
+        <p><b>진로:</b> ${result.jobs}</p>
+        <p><b>필요 역량:</b> ${result.skills}</p>
+      </div>
+      <div class="controls">
+        <button onclick="location.reload()">처음으로</button>
+      </div>
+    `;
+  }
+</script>
+
 </body>
 </html>
