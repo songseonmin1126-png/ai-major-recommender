@@ -14,6 +14,8 @@
   .next{ background:#5169ff; color:white; }
   .back { background:#d3d8ff; }
   .result-box { margin-top:20px; background:#f3f5ff; padding:16px; border-radius:12px; }
+  .major { background:white; padding:14px; border-radius:12px; margin-top:12px; box-shadow:0 3px 8px rgba(0,0,0,0.09); }
+  .score { font-size:14px; color:#5169ff; font-weight:700; margin-bottom:6px; }
 </style>
 </head>
 <body>
@@ -30,7 +32,7 @@
 </div>
 
 <script>
-/* ---------------- DB ---------------- */
+/* ⚠ 여기에 본인이 정의한 majorDB 전체를 넣으면 됨 */
 const majorDB = [
       /* AI · 컴퓨터 · 데이터 */
       {
@@ -1185,12 +1187,20 @@ const majorDB = [
       }
     ];
 
-/* ---------------- Step 목록 ---------------- */
+/* 한국어 표시 변환 테이블 */
+const dict = {
+  math:"수학", cs:"컴퓨터", physics:"물리", econ:"경제", korean:"국어", art:"미술",
+  ai:"AI", software:"소프트웨어", robot:"로봇", business:"경영/비즈니스", electronic:"전자",
+  design:"디자인", analysis:"분석", build:"제작", experiment:"실험", creative:"창의",
+  teaching:"교육", management:"관리", industry:"산업", research:"연구", startup:"창업"
+};
+
+/* Step 정의 */
 const steps = [
   { key:"subject", title:"좋아하는 과목을 선택하세요", options:['math','cs','physics','econ','korean','art'] },
   { key:"interest", title:"관심 분야를 선택하세요", options:['ai','software','robot','business','electronic','design'] },
   { key:"activity", title:"선호하는 활동 스타일을 선택하세요", options:['analysis','build','experiment','creative','teaching','management'] },
-  { key:"experience", title:"관련 경험 또는 희망 활동을 선택하세요", options:['industry','research','startup','teaching'] }
+  { key:"experience", title:"관련 경험 또는 관심 활동을 선택하세요", options:['industry','research','startup','teaching'] }
 ];
 
 let stepIndex = 0;
@@ -1205,7 +1215,7 @@ function renderStep() {
   step.options.forEach(o => {
     const div = document.createElement("div");
     div.className = "option";
-    div.innerText = o;
+    div.innerText = dict[o];
     if(selected[step.key].includes(o)) div.classList.add("active");
     div.onclick = () => {
       div.classList.toggle("active");
@@ -1228,36 +1238,49 @@ function nextStep() {
   if(stepIndex < steps.length - 1) {
     stepIndex++; renderStep();
   } else {
-    recommendMajor();
+    showResult();
   }
 }
 
-function recommendMajor() {
+/* 추천 로직 (상위 5개 + 100점 환산) */
+function showResult() {
+  document.getElementById("title").innerText = "추천 학과 결과";
   document.getElementById("options").innerHTML = "";
-  document.getElementById("title").innerText = "추천 결과";
+  document.getElementById("nextBtn").style.display = "none";
+  document.getElementById("backBtn").style.display = "none";
 
-  let best = null, bestScore = -1;
+  let resultList = [];
 
   majorDB.forEach(m => {
     let score = 0;
     Object.keys(selected).forEach(k => {
       selected[k].forEach(v => { if(m[k].includes(v)) score++; });
     });
-    if(score > bestScore) { bestScore = score; best = m; }
+    resultList.push({ major:m, score });
   });
 
-  document.getElementById("result").innerHTML = `
-    <div class="result-box">
-      <h3>${best.name}</h3>
-      <p>${best.desc}</p>
-      <p><b>학습 내용:</b> ${best.summary}</p>
-      <p><b>진로:</b> ${best.jobs}</p>
-      <p><b>필요 역량:</b> ${best.skills}</p>
-    </div>
-  `;
+  resultList.sort((a,b) => b.score - a.score);
 
-  document.getElementById("nextBtn").style.display = "none";
-  document.getElementById("backBtn").style.display = "none";
+  const maxScore = Math.max(...resultList.map(r => r.score)) || 1;
+
+  const top5 = resultList.slice(0,5);
+
+  let html = "";
+  top5.forEach(r => {
+    const percent = Math.round((r.score / maxScore) * 100);
+    html += `
+      <div class="major">
+        <div class="score">관련도: ${percent} / 100</div>
+        <h3>${r.major.name}</h3>
+        <p>${r.major.desc}</p>
+        <p><b>학습 내용:</b> ${r.major.summary}</p>
+        <p><b>진로:</b> ${r.major.jobs}</p>
+        <p><b>필요 역량:</b> ${r.major.skills}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById("result").innerHTML = html;
 }
 
 renderStep();
