@@ -122,15 +122,17 @@
     background: #f0f3ff;
     border: 1px solid transparent;
   }
+  /* 활성화 스타일 */
   .weight-level.active {
-    background: #5169ff;
-    color: white;
-    border-color: #5169ff;
-    font-weight: 600;
+    background:#5169ff; 
+    color:white; 
+    border-color:#5169ff;
+    font-weight:600;
   }
-  .weight-level:nth-child(1).active { background: #b9c3ff; color: #333; } /* 낮음 */
-  .weight-level:nth-child(2).active { background: #5169ff; color: white; } /* 보통 */
-  .weight-level:nth-child(3).active { background: #e54f4f; color: white; } /* 높음 */
+  /* 1점, 2점, 3점 별 색상 */
+  .weight-level:nth-child(1).active { background: #b9c3ff; color: #333; } /* 낮음(1점) */
+  .weight-level:nth-child(2).active { background: #5169ff; color: white; } /* 보통(2점) */
+  .weight-level:nth-child(3).active { background: #e54f4f; color: white; } /* 높음(3점) */
 
 
   /*
@@ -148,6 +150,12 @@
     margin:0; 
     font-size:16px; 
     font-weight:700;
+  }
+  .result-box p {
+      font-size: 13px;
+      color: #777;
+      margin-top: 5px;
+      margin-bottom: 0;
   }
   .major { 
     background:white; 
@@ -377,29 +385,34 @@ function renderWeightSelection() {
     item.innerHTML = `<h4>${dict[key]}</h4><div class="weight-levels"></div>`;
     
     const levelsBox = item.querySelector(".weight-levels");
-    levels.forEach(level => {
+    levels.forEach((level, index) => {
       const div = document.createElement("div");
-      div.className = `weight-level ${weights[key] === level.value ? 'active' : ''}`;
+      div.className = `weight-level ${weights[key] === level.value ? 'active' : ''}`; // 초기 렌더링 시 현재 weight 값에 따라 active 클래스 설정
       div.innerText = level.label;
+      
       div.onclick = () => {
-        // 활성화/비활성화 토글 로직
-        const isActive = div.classList.contains('active');
-        // 같은 버튼을 다시 누르면 비활성화/기본값(1)으로 설정
-        let newValue = 1;
-        if (!isActive || weights[key] !== level.value) {
-            newValue = level.value;
-        }
-
-        // 모든 레벨 버튼 비활성화
-        levelsBox.querySelectorAll('.weight-level').forEach(el => el.classList.remove('active'));
+        const targetValue = level.value;
+        const isCurrentlySet = weights[key] === targetValue;
         
-        if (newValue !== 1) {
-            div.classList.add('active');
-        }
-
-        weights[key] = newValue;
+        // 1. Toggle the weight: If current, set to 1 (default), else set to target value
+        let newWeight = isCurrentlySet ? 1 : targetValue;
+        weights[key] = newWeight;
+        
+        // 2. Update all button visuals based on the new weight
+        levelsBox.querySelectorAll('.weight-level').forEach(el => {
+            el.classList.remove('active');
+            
+            // Find the index of the element to get its corresponding level value
+            const elementIndex = Array.from(levelsBox.children).indexOf(el);
+            // newWeight와 현재 버튼의 level.value가 일치하면 active 클래스 추가 (1점일 경우도 포함)
+            if (levels[elementIndex].value === newWeight) {
+                 el.classList.add('active');
+            }
+        });
+        
         saveState(); // 가중치 변경 시 저장
       };
+      
       levelsBox.appendChild(div);
     });
     selectionBox.appendChild(item);
@@ -576,7 +589,12 @@ function showResult() {
   const top5 = resultList.slice(0,5);
 
   // 5. 결과 HTML 생성
-  let html = `<div class="result-box"><h3>사용자님의 ${maxPossibleScore}점 기준 선택을 반영한 학과 추천 결과입니다.</h3></div>`;
+  // **여기가 수정되었습니다:** 최대 매칭 점수 기준에 대한 설명을 추가했습니다.
+  let html = `
+    <div class="result-box">
+        <h3>사용자님의 선택(키워드와 가중치)으로 계산된 최대 매칭 점수 기준은 **${maxPossibleScore}점**입니다.</h3>
+        <p>아래 추천 점수와 관련도는 이 최대 점수 대비 얼마나 일치하는지를 나타냅니다.</p>
+    </div>`;
   
   if (top5.length === 0 || maxScoreFound <= 0) {
       html += `<div class="major"><h3>😭 일치하는 학과를 찾지 못했습니다.</h3><p>선택지를 더 다양하게 고르거나 '싫어하는 과목'을 해제하고 '다시 하기' 버튼을 눌러 시도해 보세요.</p></div>`;
