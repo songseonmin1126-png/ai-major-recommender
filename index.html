@@ -2,1300 +2,632 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>학과 추천 시스템</title>
+<title>미래 학과 추천 시스템 V2.0 (심화)</title>
 <style>
-  body { font-family: SUIT, sans-serif; background:#f4f6ff; margin:0; padding:0; display:flex; justify-content:center; }
-  .container { width:430px; background:white; margin:20px; padding:25px; border-radius:18px; box-shadow:0 4px 16px rgba(0,0,0,0.15); }
-  h2 { text-align:center; margin-bottom:12px; }
-  .options { display:flex; flex-wrap:wrap; gap:10px; margin-top:12px; }
-  .option { padding:10px 15px; background:#e7ecff; border-radius:10px; cursor:pointer; transition:0.2s; }
-  .option.active { background:#5169ff; color:white; }
-  button { margin-top:18px; width:100%; padding:14px; border:none; border-radius:12px; cursor:pointer; font-size:16px; }
-  .next{ background:#5169ff; color:white; }
-  .back { background:#d3d8ff; }
-  .result-box { margin-top:20px; background:#f3f5ff; padding:16px; border-radius:12px; }
-  .major { background:white; padding:14px; border-radius:12px; margin-top:12px; box-shadow:0 3px 8px rgba(0,0,0,0.09); }
-  .score { font-size:14px; color:#5169ff; font-weight:700; margin-bottom:6px; }
+  /*
+   * 1. 폰트 및 기본 레이아웃 설정
+   */
+  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  body { 
+    font-family: 'Pretendard', sans-serif; 
+    background:#f4f6ff; 
+    margin:0; 
+    padding:0; 
+    display:flex; 
+    justify-content:center; 
+    min-height:100vh;
+    align-items: flex-start;
+  }
+  .container { 
+    width:430px; 
+    background:white; 
+    margin:40px 20px;
+    padding:30px; 
+    border-radius:20px; 
+    box-shadow:0 8px 30px rgba(0,0,0,0.1);
+  }
+  
+  /*
+   * 2. 헤더 및 제목 스타일
+   */
+  header { text-align:center; margin-bottom:20px; }
+  header h1 { color:#5169ff; margin-bottom:5px; font-size:24px; }
+  header p { color:#777; font-size:14px; margin-top:0; }
+  h2 { text-align:center; margin-bottom:20px; font-size:18px; color:#333; }
+  
+  /*
+   * 3. 선택지 버튼 스타일
+   */
+  .options { 
+    display:flex; 
+    flex-wrap:wrap; 
+    gap:10px; 
+    margin-top:15px; 
+    justify-content:center;
+  }
+  .option { 
+    padding:10px 18px; 
+    background:#e7ecff; 
+    color:#5169ff;
+    border-radius:25px;
+    cursor:pointer; 
+    transition:0.2s; 
+    font-size:14px;
+    border:1px solid #d3d8ff;
+  }
+  .option:hover { background:#d3d8ff; }
+  .option.active { 
+    background:#5169ff; 
+    color:white; 
+    border-color:#5169ff;
+    font-weight:600;
+  }
+
+  /*
+   * 4. 버튼 영역 및 버튼 스타일
+   */
+  .button-group {
+    margin-top:25px;
+    display: flex;
+    gap: 10px;
+  }
+  button { 
+    flex: 1;
+    padding:14px; 
+    border:none; 
+    border-radius:12px; 
+    cursor:pointer; 
+    font-size:16px; 
+    font-weight:700;
+    transition: background 0.2s;
+  }
+  .next{ 
+    background:#5169ff; 
+    color:white; 
+  }
+  .next:hover { background:#4158d6; }
+  .back, .restart { 
+    background:#d3d8ff;
+    color:#5169ff;
+  }
+  .back:hover, .restart:hover { background:#c2c8f0; }
+
+  /* 5. 가중치 설정 스타일 */
+  .weight-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .weight-item {
+    padding: 15px;
+    border: 1px solid #d3d8ff;
+    border-radius: 10px;
+  }
+  .weight-item h4 {
+    margin: 0 0 10px 0;
+    font-size: 15px;
+    color: #333;
+  }
+  .weight-levels {
+    display: flex;
+    gap: 8px;
+  }
+  .weight-level {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    font-size: 13px;
+    background: #f0f3ff;
+    border: 1px solid transparent;
+  }
+  .weight-level.active {
+    background: #5169ff;
+    color: white;
+    border-color: #5169ff;
+    font-weight: 600;
+  }
+  .weight-level:nth-child(1).active { background: #b9c3ff; color: #333; } /* 낮음 */
+  .weight-level:nth-child(2).active { background: #5169ff; color: white; } /* 보통 */
+  .weight-level:nth-child(3).active { background: #e54f4f; color: white; } /* 높음 */
+
+
+  /*
+   * 6. 결과 영역 스타일
+   */
+  .result-box { 
+    margin-top:20px; 
+    padding:16px; 
+    border-radius:12px; 
+    background:#f3f5ff; 
+    text-align:center;
+  }
+  .result-box h3 { 
+    color:#5169ff; 
+    margin:0; 
+    font-size:16px; 
+    font-weight:700;
+  }
+  .major { 
+    background:white; 
+    padding:18px; 
+    border-radius:12px; 
+    margin-top:15px; 
+    border:1px solid #eee;
+    box-shadow:0 2px 10px rgba(0,0,0,0.05); 
+  }
+  .major h3 { 
+    margin-top:0; 
+    color:#333; 
+    font-size:18px; 
+    border-bottom:2px solid #ddd; 
+    padding-bottom:5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .series-tag {
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: #777;
+  }
+  .score { 
+    font-size:16px; 
+    color:#e54f4f; 
+    font-weight:800; 
+    margin-bottom:10px; 
+  }
+  .major p { 
+    font-size:14px; 
+    color:#555; 
+    line-height:1.5;
+    margin-bottom:8px;
+  }
+  .major p b { color:#5169ff; font-weight:700; }
+  .match-breakdown {
+    border-top: 1px dashed #eee;
+    padding-top: 10px;
+    margin-top: 10px;
+  }
+  .match-breakdown p {
+    margin: 5px 0;
+    font-size: 13px;
+  }
+  .match-breakdown span {
+    color: #5169ff;
+    font-weight: 600;
+  }
+  .negative-match {
+    color: #e54f4f !important;
+  }
 </style>
 </head>
 <body>
 
 <div class="container">
-  <h2 id="title">좋아하는 과목을 선택하세요</h2>
+  <header>
+    <h1>🎓 학과 추천 시스템 V2.0</h1>
+    <p>가중치와 비선호 과목까지 반영하는 심화 추천 시스템입니다. (총 6단계)</p>
+    <hr style="border:0; border-top:1px dashed #ddd; margin-top:20px;">
+  </header>
+
+  <h2 id="title">각 카테고리의 중요도를 설정해주세요 (1/6)</h2>
 
   <div id="options" class="options"></div>
 
-  <button id="nextBtn" class="next" onclick="nextStep()">다음</button>
-  <button id="backBtn" class="back" onclick="prevStep()" style="display:none">뒤로</button>
+  <div id="buttonGroup" class="button-group">
+    <button id="backBtn" class="back" onclick="prevStep()" style="display:none">이전</button>
+    <button id="nextBtn" class="next" onclick="nextStep()">다음</button>
+  </div>
+  
 
   <div id="result"></div>
 </div>
 
 <script>
-/* * 업데이트된 majorDB (내용은 기존과 동일하나, 코드의 완전성을 위해 포함)
- * ⚠ 선택지의 확장/세분화에 맞춰 한국어 변환 딕셔너리와 steps 배열을 수정했습니다.
+/* * -----------------------------------------------------------------------
+ * 1. 데이터베이스 및 설정 (MajorDB, Dictionary, Steps) - 학과 데이터 확장됨
+ * -----------------------------------------------------------------------
  */
+
+// 학과 데이터베이스: 계열(series) 필드 추가됨
 const majorDB = [
-      /* AI · 컴퓨터 · 데이터 */
-      {
-        name:'인공지능학과',
-        interest:['ai','software'],
-        activity:['analysis','experiment'],
-        subject:['math','cs'],
-        experience:['research','industry'],
-        desc:'머신러닝·딥러닝·AI 모델 개발과 응용.',
-        summary:'머신러닝·딥러닝의 이론과 실습, 모델 설계 및 데이터 전처리/평가 방법을 학습합니다.',
-        jobs:'AI 엔지니어, 데이터 사이언티스트, ML 연구원, MLOps 엔지니어',
-        skills:'Python, TensorFlow, PyTorch, 데이터 전처리, 통계, 모델 튜닝, 성능평가'
-      },
-      {
-        name:'데이터사이언스학과',
-        interest:['ai','software','business'],
-        activity:['analysis'],
-        subject:['math','cs','econ'],
-        experience:['industry','research'],
-        desc:'빅데이터 처리, 통계, 시각화.',
-        summary:'통계·머신러닝 기법과 데이터 엔지니어링, 시각화 및 비즈니스 인사이트 도출을 배웁니다.',
-        jobs:'데이터 분석가, 데이터 엔지니어, 머신러닝 엔지니어, BI 분석가',
-        skills:'Python(R), SQL, Pandas, 시각화(TABLOA/Matplotlib), 통계모델, 데이터 파이프라인'
-      },
-      {
-        name:'컴퓨터공학과',
-        interest:['software','electronic'],
-        activity:['analysis','build'],
-        subject:['math','cs'],
-        experience:['industry'],
-        desc:'알고리즘·시스템·네트워크.',
-        summary:'알고리즘, 운영체제, 컴퓨터 구조, 네트워크 등 컴퓨팅의 기초와 시스템 개발을 학습합니다.',
-        jobs:'소프트웨어 엔지니어, 시스템 엔지니어, 네트워크 엔지니어, 임베디드 개발자',
-        skills:'C/C++, Java, Python, 자료구조, 운영체제, 네트워크, 디버깅'
-      },
-      {
-        name:'소프트웨어학과',
-        interest:['software'],
-        activity:['build','analysis'],
-        subject:['cs','math'],
-        experience:['industry'],
-        desc:'웹/앱/시스템 개발 및 소프트웨어 공학.',
-        summary:'요구분석·설계·테스트·유지보수 등 소프트웨어 개발 전 주기를 실전 중심으로 배웁니다.',
-        jobs:'웹/앱 개발자, 풀스택 개발자, QA 엔지니어, 소프트웨어 아키텍트',
-        skills:'JavaScript, React, Node.js, Git, TDD, REST API, CI/CD'
-      },
-      {
-        name:'정보보안학과',
-        interest:['software','ai'],
-        activity:['analysis','build'],
-        subject:['cs','math'],
-        experience:['industry'],
-        desc:'암호학·침해사고 대응·보안 설계.',
-        summary:'네트워크·시스템 보안, 암호학, 침해사고 분석 및 대응 기술을 익힙니다.',
-        jobs:'정보보안 엔지니어, 보안컨설턴트, 포렌식 전문가, SOC 분석가',
-        skills:'네트워크 보안, 암호학, 침해대응, Linux, SIEM, 취약점 진단'
-      },
-      {
-        name:'빅데이터공학과',
-        interest:['ai','software','business'],
-        activity:['analysis'],
-        subject:['math','cs'],
-        experience:['industry'],
-        desc:'데이터 파이프라인과 분산처리 기술.',
-        summary:'대용량 데이터 처리·분산시스템·데이터 웨어하우스 구축 역량을 배웁니다.',
-        jobs:'데이터 엔지니어, 빅데이터 개발자, ETL 개발자, 데이터 플랫폼 엔지니어',
-        skills:'Hadoop, Spark, Kafka, SQL, NoSQL, 데이터 모델링, 성능 최적화'
-      },
-      {
-        name:'클라우드컴퓨팅학과',
-        interest:['ai','software'],
-        activity:['analysis','build'],
-        subject:['cs','math'],
-        experience:['industry'],
-        desc:'클라우드 인프라·MLOps.',
-        summary:'클라우드 아키텍처, 컨테이너, 오케스트레이션, MLOps를 실무 중심으로 학습합니다.',
-        jobs:'클라우드 엔지니어, DevOps 엔지니어, SRE, MLOps 엔지니어',
-        skills:'AWS/GCP/Azure, Docker, Kubernetes, Terraform, CI/CD, 모니터링'
-      },
-      {
-        name:'게임공학과',
-        interest:['software','design'],
-        activity:['creative','build'],
-        subject:['cs','art'],
-        experience:['industry'],
-        desc:'게임 엔진·그래픽·인터랙션 설계.',
-        summary:'게임 프로그래밍과 그래픽스, 물리 시뮬레이션, 게임 디자인을 통합적으로 배웁니다.',
-        jobs:'게임 개발자, 그래픽스 프로그래머, 게임 디자이너, QA',
-        skills:'C++, Unity, Unreal Engine, 쉐이더, 물리엔진, 3D 수학'
-      },
-      {
-        name:'HCI/사용자경험학과',
-        interest:['software','design'],
-        activity:['creative','analysis'],
-        subject:['cs','art'],
-        experience:['research','industry'],
-        desc:'사용자 연구와 인터랙션 디자인.',
-        summary:'사용자 리서치, 프로토타이핑, UX 평가를 통해 사용자 중심 설계를 실습합니다.',
-        jobs:'UX 리서처, UX 디자이너, UI 디자이너, 제품 디자이너',
-        skills:'Figma, 프로토타입, 사용자테스트, UX 리서치, 정보구조, 인터랙션 디자인'
-      },
-      {
-        name:'블록체인학과',
-        interest:['ai','software','business'],
-        activity:['analysis','build'],
-        subject:['cs','econ'],
-        experience:['industry','startup'],
-        desc:'분산원장·스마트컨트랙트 개발.',
-        summary:'블록체인 아키텍처, 스마트 컨트랙트 개발 및 탈중앙화 애플리케이션을 배웁니다.',
-        jobs:'블록체인 개발자, 스마트컨트랙트 엔지니어, 탈중앙화 앱 개발자',
-        skills:'Solidity, Ethereum, 스마트컨트랙트 보안, 분산원장, 암호화 기법'
-      },
-      {
-        name:'메타버스학과',
-        interest:['ai','software','design'],
-        activity:['creative','build'],
-        subject:['art','cs'],
-        experience:['industry','startup'],
-        desc:'XR·3D 콘텐츠·가상환경 설계.',
-        summary:'XR 기술, 3D 제작, 실시간 네트워킹 기반 가상환경 설계 실무를 다룹니다.',
-        jobs:'XR 개발자, 3D 아티스트, 메타버스 기획자, 가상환경 디자이너',
-        skills:'Unity/Unreal, 3D 모델링, 네트워크 엔진, UX for VR, 실시간 그래픽스'
-      },
-      {
-        name:'핀테크학과',
-        interest:['ai','software','business'],
-        activity:['analysis','build'],
-        subject:['econ','math','cs'],
-        experience:['industry','startup'],
-        desc:'금융기술·결제·투자 알고리즘.',
-        summary:'금융 데이터 처리와 결제 시스템, 알고리즘 트레이딩 및 보안 기술을 익힙니다.',
-        jobs:'핀테크 개발자, 데이터 애널리스트, 결제 시스템 엔지니어, 퀀트 개발자',
-        skills:'Python, 금융데이터처리, API 설계, 보안, 결제 프로토콜'
-      },
-      {
-        name:'컴퓨터교육과',
-        interest:['software'],
-        activity:['teaching'],
-        subject:['cs'],
-        experience:['teaching'],
-        desc:'SW 교육법과 컴퓨터 교육 전문가 양성.',
-        summary:'컴퓨팅 사고와 프로그래밍 교육 방법론, 교육용 콘텐츠 개발을 학습합니다.',
-        jobs:'컴퓨터 교사, 교육 콘텐츠 개발자, 교육 기관 강사',
-        skills:'Python/Block coding, 교육방법론, 커리큘럼 설계, 수업 운영'
-      },
-      {
-        name:'임베디드시스템학과',
-        interest:['electronic','robot','software'],
-        activity:['build'],
-        subject:['cs','physics'],
-        experience:['industry'],
-        desc:'펌웨어·마이크로컨트롤러·IoT 개발.',
-        summary:'임베디드 하드웨어와 펌웨어 설계, 실시간 OS 및 디바이스 통합 개발을 배웁니다.',
-        jobs:'임베디드 개발자, 펌웨어 엔지니어, IoT 개발자',
-        skills:'C, RTOS, MCU, 디바이스 드라이버, 하드웨어 디버깅, 저전력 설계'
-      },
-      {
-        name:'IoT공학과',
-        interest:['software','electronic','robot'],
-        activity:['build','analysis'],
-        subject:['cs','physics'],
-        experience:['industry'],
-        desc:'사물인터넷 플랫폼과 센서 응용.',
-        summary:'센서 네트워크, IoT 플랫폼, 데이터 수집 및 엣지 컴퓨팅을 실습 중심으로 학습합니다.',
-        jobs:'IoT 엔지니어, 센서 솔루션 개발자, 엣지 컴퓨팅 엔지니어',
-        skills:'MQTT, 센서 인터페이스, 임베디드, 무선통신, 엣지 컴퓨팅'
-      },
-      {
-        name:'소프트웨어융합학과',
-        interest:['software','business'],
-        activity:['analysis','management'],
-        subject:['cs','econ'],
-        experience:['industry'],
-        desc:'비즈니스·SW 융합 기술 연구.',
-        summary:'비즈니스 요구와 소프트웨어 기술 융합을 통해 실무 중심의 솔루션을 설계합니다.',
-        jobs:'프로덕트 매니저, 비즈니스 개발자, 솔루션 아키텍트',
-        skills:'요구분석, 데이터분석, API 설계, 프로젝트 관리, UX 이해'
-      },
-      {
-        name:'AI응용학과',
-        interest:['ai'],
-        activity:['analysis','experiment'],
-        subject:['math','cs'],
-        experience:['research','industry'],
-        desc:'의료·제조·농업 등 산업별 AI 응용.',
-        summary:'특정 산업의 문제를 AI로 해결하는 응용기술과 프로젝트 수행 능력을 배웁니다.',
-        jobs:'도메인 AI 엔지니어, 솔루션 개발자, 컨설턴트',
-        skills:'도메인 지식, 모델링, 데이터 엔지니어링, 배포·운영'
-      },
-      {
-        name:'컴퓨터비전학과',
-        interest:['ai','software'],
-        activity:['experiment','analysis'],
-        subject:['cs','math'],
-        experience:['research','industry'],
-        desc:'영상처리·객체인식·비전 알고리즘.',
-        summary:'영상 이해, 객체 탐지, 딥러닝 기반 비전 모델을 설계하고 최적화합니다.',
-        jobs:'컴퓨터비전 엔지니어, 영상분석 연구원, 자율주행 개발자',
-        skills:'OpenCV, PyTorch, CNN, 이미지 처리, 데이터 증강, 라벨링'
-      },
-      {
-        name:'자연어처리학과',
-        interest:['ai','software'],
-        activity:['analysis','experiment'],
-        subject:['cs','korean'],
-        experience:['research','industry'],
-        desc:'언어모델·텍스트 마이닝·기계번역.',
-        summary:'텍스트 전처리, 언어 모델, 번역 및 대화 시스템 개발을 다룹니다.',
-        jobs:'NLP 엔지니어, 챗봇 개발자, 머신번역 연구원',
-        skills:'Python, NLP 라이브러리(spaCy, transformers), 토큰화, 언어모델 튜닝'
-      },
-      {
-        name:'로봇AI융합학과',
-        interest:['ai','robot'],
-        activity:['build','experiment'],
-        subject:['cs','physics'],
-        experience:['industry','research'],
-        desc:'로봇 지능화·자율주행·센서융합.',
-        summary:'로봇의 지능화를 위한 센서융합, SLAM, 제어 및 AI 통합 기술을 배웁니다.',
-        jobs:'로봇 소프트웨어 엔지니어, 자율주행 개발자, 연구원',
-        skills:'ROS, SLAM, 센서 퓨전, 제어이론, 딥러닝'
-      },
+      /* 공학 계열 (2개 추가) */
+      { series:'공학', name:'인공지능학과', interest:['ai','software'], activity:['analysis','experiment'], subject:['math','cs'], experience:['research','industry'], desc:'머신러닝·딥러닝·AI 모델 개발과 응용.', summary:'머신러닝·딥러닝의 이론과 실습, 모델 설계 및 데이터 전처리/평가 방법을 학습합니다.', jobs:'AI 엔지니어, 데이터 사이언티스트, ML 연구원, MLOps 엔지니어', skills:'Python, TensorFlow, PyTorch, 데이터 전처리, 통계, 모델 튜닝, 성능평가' },
+      { series:'공학', name:'데이터사이언스학과', interest:['ai','software','business'], activity:['analysis'], subject:['math','cs','econ'], experience:['industry','research'], desc:'빅데이터 처리, 통계, 시각화.', summary:'통계·머신러닝 기법과 데이터 엔지니어링, 시각화 및 비즈니스 인사이트 도출을 배웁니다.', jobs:'데이터 분석가, 데이터 엔지니어, 머신러닝 엔지니어, BI 분석가', skills:'Python(R), SQL, Pandas, 시각화(TABLOA/Matplotlib), 통계모델, 데이터 파이프라인' },
+      { series:'공학', name:'컴퓨터공학과', interest:['software','electronic'], activity:['analysis','build'], subject:['math','cs'], experience:['industry'], desc:'알고리즘·시스템·네트워크.', summary:'알고리즘, 운영체제, 컴퓨터 구조, 네트워크 등 컴퓨팅의 기초와 시스템 개발을 학습합니다.', jobs:'소프트웨어 엔지니어, 시스템 엔지니어, 네트워크 엔지니어, 임베디드 개발자', skills:'C/C++, Java, Python, 자료구조, 운영체제, 네트워크, 디버깅' },
+      { series:'공학', name:'로봇공학과', interest:['robot','electronic','ai'], activity:['build','experiment'], subject:['physics','cs'], experience:['industry','research'], desc:'로봇 제어·메카트로닉스·자율시스템.', summary:'메카트로닉스, 제어시스템, 센서 융합을 통해 로봇을 설계·구현합니다.', jobs:'로봇 개발자, 자동화 엔지니어, 시스템 통합 엔지니어', skills:'CAD, 제어 알고리즘, PLC, ROS, 센서 인터페이스, 모션 계획' },
+      { series:'공학', name:'기계공학과', interest:['robot'], activity:['build','experiment'], subject:['physics','math'], experience:['industry'], desc:'기계설계·유체·열역학·재료.', summary:'기계 설계, 열역학, 유체역학 및 재료공학을 폭넓게 배우는 전공입니다.', jobs:'기계설계 엔지니어, 연구개발, 생산기술 엔지니어', skills:'CAD, CAE(ANSYS), 재료해석, 열유체 해석, 제작공정' },
+      { series:'공학', name:'전기전자공학과', interest:['electronic','robot'], activity:['build','experiment'], subject:['physics','math'], experience:['industry'], desc:'회로설계·전자소자·통신이론.', summary:'아날로그/디지털 회로, 전자소자, 통신시스템의 설계 및 응용을 학습합니다.', jobs:'회로설계 엔지니어, 통신 엔지니어, 하드웨어 개발자', skills:'회로설계(SPICE), 아날로그/디지털 회로, PCB, 신호처리, 임베디드' },
+      { series:'공학', name:'반도체공학과', interest:['electronic'], activity:['analysis','experiment'], subject:['physics','chemistry'], experience:['industry'], desc:'소자·공정·칩설계·테스트.', summary:'반도체 소자 물리와 공정, 칩 설계 및 테스트 기술을 집중적으로 배웁니다.', jobs:'공정 엔지니어, 칩 설계 엔지니어, 테스트 엔지니어', skills:'반도체 공정, TCAD, VLSI 설계, 계측, 신호무결성' },
+      { series:'공학', name:'화학공학과', interest:['chemistry'], activity:['experiment','analysis'], subject:['chemistry','math'], experience:['industry'], desc:'공정·촉매·에너지 소재.', summary:'화학공정 설계, 촉매 및 반응공학, 공정 최적화를 학습합니다.', jobs:'공정엔지니어, 공장설계, 소재연구원', skills:'공정시뮬레이션, 반응공학, 공정계측, 품질관리' },
+      { series:'공학', name:'재료공학과', interest:['chemistry','electronic'], activity:['experiment'], subject:['chemistry','physics'], experience:['industry'], desc:'금속·세라믹·복합재료 연구.', summary:'신소재 설계, 물성분석, 소재 응용기술을 다룹니다.', jobs:'소재연구원, 공정개발, 배터리/반도체 소재개발', skills:'재료분석, 전기화학, 표면처리, 소재합성' },
+      { series:'공학', name:'산업공학과', interest:['business','ai','software'], activity:['analysis','management'], subject:['math','cs'], experience:['industry'], desc:'시스템 최적화·운영리서치.', summary:'생산 및 서비스 시스템의 최적화, 운영리서치, 데이터 분석을 학습합니다.', jobs:'공정혁신 엔지니어, 데이터 애널리스트, 컨설팅', skills:'운영리서치, 시뮬레이션, Python, 최적화 기법, Lean' },
+      { series:'공학', name:'건축학과', interest:['design'], activity:['build','creative'], subject:['art','math'], experience:['industry'], desc:'건축설계·구조·도시계획.', summary:'건축설계와 구조, 시공 관리 및 도시계획의 기초를 실무 중심으로 배웁니다.', jobs:'건축가, 설계사, 시공관리자, 도시계획가', skills:'CAD, 모델링(SketchUp), 건축구조 이해, 렌더링' },
+      { series:'공학', name:'도시공학과', interest:['design','env'], activity:['analysis','management'], subject:['math','soc'], experience:['industry','public'], desc:'도시계획·교통·인프라 설계.', summary:'도시계획, 교통공학, 인프라 설계 및 도시재생 정책을 학습합니다.', jobs:'도시계획가, 교통엔지니어, 지자체 정책분석가', skills:'GIS, 교통시뮬레이션, 계획수립, 정책분석' },
+      { series:'공학', name:'토목환경공학과', interest:['env'], activity:['build','analysis'], subject:['math','physics'], experience:['industry','public'], desc:'교량·도로·수자원·상하수도 계획.', summary:'사회 기반 시설 설계, 건설 및 환경 오염 방지 기술을 학습합니다.', jobs:'토목 기술자, 환경 공무원, 건설 엔지니어', skills:'CAD, 구조 해석, 수리 수문학, 환경 규제 지식' },
+      
+      /* 자연과학 계열 (2개 추가) */
+      { series:'자연', name:'생명과학과', interest:['biology'], activity:['experiment'], subject:['bio'], experience:['research'], desc:'분자생물학·세포생물학.', summary:'생명 현상에 대한 기초 이론과 실험기술, 분석 방법을 학습합니다.', jobs:'기초 연구원, 실험연구원, 교육 분야', skills:'실험설계, 현미경, 분자생물 기법, 실험데이터 분석' },
+      { series:'자연', name:'화학과', interest:['chemistry'], activity:['experiment'], subject:['chemistry'], experience:['research'], desc:'유기·무기·분석·물리화학.', summary:'기초화학 이론과 실험기법을 통해 소재 및 반응을 연구합니다.', jobs:'연구원, 분석화학자, 품질관리자', skills:'분석기기(LC/GC), 합성, 분광학, 실험설계' },
+      { series:'자연', name:'지구환경과학과', interest:['env','chemistry'], activity:['analysis','experiment'], subject:['chemistry','bio'], experience:['research'], desc:'기후·지질·환경 분석.', summary:'기후변화, 지구시스템, 지구환경 데이터 분석을 학습합니다.', jobs:'환경연구원, 기후데이터 분석가, 지질탐사 연구원', skills:'GIS, 원격탐사, 데이터분석, 지구물리학' },
+      { series:'자연', name:'통계학과', interest:['ai','math'], activity:['analysis'], subject:['math'], experience:['research','industry'], desc:'확률·통계·데이터모델링.', summary:'확률이론과 통계분석, 데이터모델링 및 추정기법을 학습합니다.', jobs:'데이터 애널리스트, 통계분석가, 연구원', skills:'R/Python, 통계모델, 베이즈, 계량분석, 시계열분석' },
+      { series:'자연', name:'응용수학과', interest:['math','ai'], activity:['analysis'], subject:['math'], experience:['research'], desc:'수치해석·모델링·최적화.', summary:'수치해석, 모델링 및 최적화 이론을 기반으로 응용문제를 해결합니다.', jobs:'금융수학자, 연구원, 모델개발자', skills:'수치해석, 최적화, 프로그래밍, 수리통계' },
+      { series:'자연', name:'물리학과', interest:['electronic','env'], activity:['analysis','experiment'], subject:['physics','math'], experience:['research','industry'], desc:'역학·전자기학·양자역학.', summary:'기초 물리 이론 및 실험, 응용 분야 (반도체, 신소재, 광학) 연구', jobs:'과학연구원, 반도체/전자제품 개발자, 교사', skills:'수학적 모델링, 실험 설계, 데이터 분석, 프로그래밍(Matlab/Python)' },
+      { series:'자연', name:'천문우주학과', interest:['env'], activity:['analysis'], subject:['physics','math'], experience:['research'], desc:'천체 관측·우주론·천체물리.', summary:'천체 물리학, 우주론, 관측 기술 및 데이터 해석을 학습합니다.', jobs:'천문연구원, 우주산업체, 데이터 분석가', skills:'관측 장비 사용, 수치 해석, 물리 지식, 프로그래밍' },
 
-      /* 로봇 · 기계 · 메카트로닉스 */
-      {
-        name:'로봇공학과',
-        interest:['robot','electronic','ai'],
-        activity:['build','experiment'],
-        subject:['physics','cs'],
-        experience:['industry','research'],
-        desc:'로봇 제어·메카트로닉스·자율시스템.',
-        summary:'메카트로닉스, 제어시스템, 센서 융합을 통해 로봇을 설계·구현합니다.',
-        jobs:'로봇 개발자, 자동화 엔지니어, 시스템 통합 엔지니어',
-        skills:'CAD, 제어 알고리즘, PLC, ROS, 센서 인터페이스, 모션 계획'
-      },
-      {
-        name:'기계공학과',
-        interest:['robot'],
-        activity:['build','experiment'],
-        subject:['physics','math'],
-        experience:['industry'],
-        desc:'기계설계·유체·열역학·재료.',
-        summary:'기계 설계, 열역학, 유체역학 및 재료공학을 폭넓게 배우는 전공입니다.',
-        jobs:'기계설계 엔지니어, 연구개발, 생산기술 엔지니어',
-        skills:'CAD, CAE(ANSYS), 재료해석, 열유체 해석, 제작공정'
-      },
-      {
-        name:'메카트로닉스공학과',
-        interest:['robot','electronic'],
-        activity:['build','experiment'],
-        subject:['physics','cs'],
-        experience:['industry'],
-        desc:'기계·전자·제어 융합 설계.',
-        summary:'기계와 전자의 융합을 통해 스마트 장치 및 자동화 시스템을 개발합니다.',
-        jobs:'메카트로닉스 엔지니어, 자동화 시스템 개발자, 제어 엔지니어',
-        skills:'임베디드, 모터제어, 센서, PLC, 제어이론'
-      },
-      {
-        name:'기계설계학과',
-        interest:['robot'],
-        activity:['build'],
-        subject:['physics','math'],
-        experience:['industry'],
-        desc:'CAD·CAM·정밀기계 설계.',
-        summary:'정밀기계 설계와 제조기술, CAD/CAM 기반의 설계 실무를 익힙니다.',
-        jobs:'기계설계자, CAD 엔지니어, 생산설계',
-        skills:'SolidWorks, AutoCAD, CAM, GD&T, 공차설계, 프로토타입 제작'
-      },
-      {
-        name:'자동차공학과',
-        interest:['robot','electronic'],
-        activity:['build'],
-        subject:['physics','math'],
-        experience:['industry'],
-        desc:'자동차 시스템·파워트레인·EV 기술.',
-        summary:'자동차 구조, 동역학, 전기차 및 파워트레인 기술을 중심으로 실습합니다.',
-        jobs:'파워트레인 엔지니어, 차량제어 개발자, 전기차 시스템 엔지니어',
-        skills:'내연기관/전기모터 이해, 배터리시스템, 자동차 제어, CAN 통신'
-      },
-      {
-        name:'항공우주공학과',
-        interest:['robot','physics'],
-        activity:['experiment','build'],
-        subject:['physics','math'],
-        experience:['research','industry'],
-        desc:'항공기·우주선·추진시스템.',
-        summary:'항공우주 구조, 추진, 비행역학 등 항공우주 시스템 전반을 다룹니다.',
-        jobs:'항공기 설계자, 우주시스템 엔지니어, 추진시스템 연구원',
-        skills:'유체역학, 구조해석, 항공재료, 시스템 통합, 제도'
-      },
-      {
-        name:'제어계측공학과',
-        interest:['robot','electronic'],
-        activity:['analysis','build'],
-        subject:['physics','math'],
-        experience:['industry'],
-        desc:'제어이론·센서·계측 시스템.',
-        summary:'정밀계측과 자동제어 기술을 통해 제어 시스템을 설계합니다.',
-        jobs:'제어엔지니어, 계측기 개발자, 시스템 통합 엔지니어',
-        skills:'제어이론, PID, 센서 기술, 계측보정, 데이터 수집'
-      },
-      {
-        name:'스마트제조공학과',
-        interest:['robot','business'],
-        activity:['analysis','build'],
-        subject:['math','cs'],
-        experience:['industry'],
-        desc:'스마트팩토리·산업자동화.',
-        summary:'스마트팩토리 운영, 자동화 및 IoT 기반 생산 시스템을 학습합니다.',
-        jobs:'스마트팩토리 엔지니어, 생산 자동화 엔지니어, 시스템 통합자',
-        skills:'PLC, SCADA, MES, IoT, 데이터 분석, 공정 최적화'
-      },
-      {
-        name:'정밀공학과',
-        interest:['robot'],
-        activity:['build','experiment'],
-        subject:['physics','math'],
-        experience:['industry'],
-        desc:'정밀기계·나노가공·측정기술.',
-        summary:'정밀 가공·계측·미세구조 제어 기술을 통해 고정밀 장비를 설계합니다.',
-        jobs:'정밀기계 엔지니어, 계측기 개발자, 나노가공 연구원',
-        skills:'마이크로가공, 측정기술, CNC, 표면처리, 정밀설계'
-      },
-      {
-        name:'로봇소프트웨어학과',
-        interest:['robot','software'],
-        activity:['build','analysis'],
-        subject:['cs','math'],
-        experience:['industry'],
-        desc:'로봇 소프트웨어·ROS·시뮬레이션.',
-        summary:'로봇 소프트웨어 개발, 시뮬레이션, 제어 소프트웨어 설계에 중점을 둡니다.',
-        jobs:'로봇 소프트웨어 엔지니어, ROS 개발자, 시뮬레이션 엔지니어',
-        skills:'ROS, C++/Python, Gazebo, 시뮬레이션, 메시징 시스템'
-      },
+      /* 인문사회 계열 (3개 추가) */
+      { series:'인문사회', name:'심리학과', interest:['social'], activity:['analysis'], subject:['korean','soc'], experience:['research','teaching'], desc:'인지·상담·임상·발달 심리.', summary:'심리 이론과 실험, 상담기법 및 심리 평가를 학습합니다.', jobs:'심리상담가, 산업/조직 심리사, 연구원', skills:'심리평가, 상담기법, 통계분석(SPSS/R), 실험설계' },
+      { series:'인문사회', name:'사회학과', interest:['social'], activity:['analysis'], subject:['soc','korean'], experience:['research'], desc:'사회구조·문화·집단 분석.', summary:'사회현상 분석, 조사방법론, 이론적 틀을 통해 사회문제를 연구합니다.', jobs:'사회조사분석가, 정책연구원, NGO 활동가', skills:'설문분석, 통계, 질적연구, 리포트 작성' },
+      { series:'인문사회', name:'정치외교학과', interest:['social'], activity:['analysis'], subject:['soc'], experience:['public','research'], desc:'정치제도·국제관계·외교정책.', summary:'정치이론과 국제관계, 외교정책 분석을 통해 국제무대에서의 대응력을 키웁니다.', jobs:'외교관, 정책분석가, 국제기구 직원', skills:'국제관계 지식, 정책분석, 논리적 글쓰기, 외국어' },
+      { series:'인문사회', name:'법학과', interest:['social'], activity:['analysis','management'], subject:['korean','soc'], experience:['industry','public'], desc:'민법·형법·행정법 등 법학 전반.', summary:'법이론과 사례분석을 통해 법적 사고와 문제해결 능력을 기릅니다.', jobs:'변호사, 판사, 공공기관 법무담당자, 법률고문', skills:'법리분석, 논리적 사고, 문서작성, 그룹토론' },
+      { series:'인문사회', name:'교육학과', interest:['social'], activity:['teaching'], subject:['korean','soc'], experience:['teaching'], desc:'교육이론·교육행정·교수법.', summary:'교육이론과 교육과정, 교수법 및 교육평가를 학습합니다.', jobs:'교사, 교육연구원, 교육컨설턴트', skills:'수업설계, 평가기법, 교육심리, 커뮤니케이션' },
+      { series:'인문사회', name:'국어국문학과', interest:['social'], activity:['analysis','creative'], subject:['korean'], experience:['teaching','research'], desc:'문학·언어·텍스트 분석.', summary:'문학작품 분석, 글쓰기 및 텍스트 연구 능력을 기릅니다.', jobs:'교사, 출판편집자, 작가, 콘텐츠 기획자', skills:'비평적 읽기, 글쓰기, 번역, 편집' },
+      { series:'인문사회', name:'역사학과', interest:['social','liberal'], activity:['analysis'], subject:['korean','soc'], experience:['research','teaching','public'], desc:'고대사·현대사·역사해석.', summary:'사료 분석을 통해 역사적 사건과 시대상을 비판적으로 이해합니다.', jobs:'역사 연구원, 사료 편찬원, 기록 관리자, 교사', skills:'비판적 사고, 사료 분석, 논리적 글쓰기, 인문학적 소양' },
+      { series:'인문사회', name:'행정학과', interest:['social','business'], activity:['management','analysis'], subject:['soc','econ'], experience:['public','industry'], desc:'정책 결정·조직 관리·공공 서비스.', summary:'정부 정책 결정 과정, 공공 조직 관리 및 사회 문제를 해결하는 방법을 연구합니다.', jobs:'행정 공무원, 정책 연구원, 공공기관 기획자', skills:'정책 분석, 조직 관리론, 법률 지식, 통계 분석' },
+      { series:'인문사회', name:'철학과', interest:['social','liberal'], activity:['analysis','creative'], subject:['korean'], experience:['research','teaching'], desc:'논리·윤리·인간 존재 연구.', summary:'서양 및 동양 철학 이론, 논리학, 윤리학 등을 배우며 비판적 사고력을 기릅니다.', jobs:'철학 연구원, 논술 강사, 콘텐츠 기획자', skills:'논리적 사고, 비판적 분석, 인문학적 글쓰기, 독해력' },
 
-      /* 전자 · 전기 · 반도체 · 통신 */
-      {
-        name:'전기전자공학과',
-        interest:['electronic','robot'],
-        activity:['build','experiment'],
-        subject:['physics','math'],
-        experience:['industry'],
-        desc:'회로설계·전자소자·통신이론.',
-        summary:'아날로그/디지털 회로, 전자소자, 통신시스템의 설계 및 응용을 학습합니다.',
-        jobs:'회로설계 엔지니어, 통신 엔지니어, 하드웨어 개발자',
-        skills:'회로설계(SPICE), 아날로그/디지털 회로, PCB, 신호처리, 임베디드'
-      },
-      {
-        name:'반도체공학과',
-        interest:['electronic'],
-        activity:['analysis','experiment'],
-        subject:['physics','chemistry'],
-        experience:['industry'],
-        desc:'소자·공정·칩설계·테스트.',
-        summary:'반도체 소자 물리와 공정, 칩 설계 및 테스트 기술을 집중적으로 배웁니다.',
-        jobs:'공정 엔지니어, 칩 설계 엔지니어, 테스트 엔지니어',
-        skills:'반도체 공정, TCAD, VLSI 설계, 계측, 신호무결성'
-      },
-      {
-        name:'정보통신공학과',
-        interest:['electronic','software'],
-        activity:['analysis','experiment'],
-        subject:['math','physics','cs'],
-        experience:['industry'],
-        desc:'무선통신·네트워크·신호처리.',
-        summary:'무선/유선 통신, 네트워크 설계, 디지털 신호처리 기술을 학습합니다.',
-        jobs:'통신엔지니어, 네트워크 엔지니어, 신호처리 연구원',
-        skills:'통신이론, MATLAB, DSP, RF 기초, 프로토콜 이해'
-      },
-      {
-        name:'임베디드시스템공학과',
-        interest:['electronic','software'],
-        activity:['build'],
-        subject:['cs','physics'],
-        experience:['industry'],
-        desc:'임베디드 설계·펌웨어·RTOS.',
-        summary:'마이크로컨트롤러 기반 시스템과 펌웨어 설계를 실습 중심으로 배웁니다.',
-        jobs:'펌웨어 엔지니어, 임베디드 개발자, IoT 엔지니어',
-        skills:'C, RTOS, 디바이스 드라이버, 하드웨어 인터페이스, 디버깅'
-      },
-      {
-        name:'광전자공학과',
-        interest:['electronic','physics'],
-        activity:['experiment'],
-        subject:['physics','math'],
-        experience:['research','industry'],
-        desc:'광학·레이저·광통신 기술.',
-        summary:'광학 소자, 레이저, 광통신 시스템의 원리와 응용을 연구합니다.',
-        jobs:'광통신 엔지니어, 레이저 연구원, 광소자 개발자',
-        skills:'광학 설계, 레이저, 광섬유, 광계측, 시뮬레이션'
-      },
-      {
-        name:'전력공학과',
-        interest:['electronic'],
-        activity:['analysis','build'],
-        subject:['physics','math'],
-        experience:['industry'],
-        desc:'전력시스템·전력전자·스마트그리드.',
-        summary:'전력 시스템과 전력 전자, 스마트그리드 및 재생에너지 연계 기술을 배웁니다.',
-        jobs:'전력계통 엔지니어, 설비관리, 그리드 통합 엔지니어',
-        skills:'전력공학, 전력전자, 보호계전, 고전압, 시스템 해석'
-      },
-      {
-        name:'통신소자공학과',
-        interest:['electronic'],
-        activity:['experiment'],
-        subject:['physics','chemistry'],
-        experience:['research'],
-        desc:'무선소자·안테나·RF설계.',
-        summary:'RF·마이크로파 소자와 안테나 설계 및 측정 기술을 다룹니다.',
-        jobs:'RF 엔지니어, 안테나 설계자, 무선 소자 연구원',
-        skills:'RF 측정, 안테나 설계, 마이크로파 공학, 전자기 해석'
-      },
+      /* 경영 계열 (1개 추가) */
+      { series:'경영경제', name:'경영학과', interest:['business'], activity:['management'], subject:['econ','math'], experience:['industry','startup'], desc:'조직관리·마케팅·재무·전략.', summary:'경영의 기초(재무·마케팅·조직·전략)를 학습하고 실무적 문제 해결 능력을 기릅니다.', jobs:'기획자, 마케팅 매니저, 전략 컨설턴트, 창업가', skills:'재무분석, 마케팅, 전략기획, 데이터분석, 프레젠테이션' },
+      { series:'경영경제', name:'경제학과', interest:['business'], activity:['analysis'], subject:['econ','math'], experience:['research','industry'], desc:'경제이론·계량분석·정책연구.', summary:'거시·미시경제 이론과 계량경제 분석으로 경제전반을 분석합니다.', jobs:'경제분석가, 정책연구원, 금융분석가', skills:'계량분석(R/Stata), 경제모형, 데이터해석, 정책분석' },
+      { series:'경영경제', name:'회계학과', interest:['business'], activity:['analysis'], subject:['math','econ'], experience:['industry'], desc:'재무회계·관리회계·세무.', summary:'회계원리, 재무제표 분석, 세무실무 등 기업회계 전반을 다룹니다.', jobs:'회계사, 세무사 보조, 재무분석가, ERP운영자', skills:'재무제표분석, 세무지식, Excel, 회계시스템' },
+      { series:'경영경제', name:'금융공학과', interest:['business','ai'], activity:['analysis'], subject:['math','cs','econ'], experience:['industry'], desc:'퀀트모델·리스크 관리.', summary:'금융수학, 계량분석, 파생상품 및 리스크 관리 모델을 학습합니다.', jobs:'퀀트 개발자, 리스크 애널리스트, 금융 데이터 과학자', skills:'Python, R, 확률/통계, 금융모델링, 시계열분석' },
+      { series:'경영경제', name:'국제통상학과', interest:['business'], activity:['management','analysis'], subject:['econ','soc'], experience:['industry','public'], desc:'무역 이론·국제 금융·통상 정책.', summary:'국제 무역 이론과 실무, 환율 및 국제 금융 시장, 통상 정책을 학습합니다.', jobs:'무역 전문가, 국제 금융 분석가, 해외 영업/마케팅, 통상 공무원', skills:'무역 실무, 외국어, 경제 분석, 국제법 지식' },
 
-      /* 바이오 · 의학 · 보건 */
-      {
-        name:'바이오공학과',
-        interest:['biology'],
-        activity:['experiment','analysis'],
-        subject:['bio','chemistry'],
-        experience:['research','industry'],
-        desc:'유전자공학·단백질·바이오신약.',
-        summary:'분자생물학 기법과 바이오 의약품 개발, 실험 분석 기술을 학습합니다.',
-        jobs:'연구원(바이오), 제약 R&D, QC/QA 엔지니어',
-        skills:'PCR, 세포배양, 단백질분석, 시퀀싱, 데이터 해석'
-      },
-      {
-        name:'생명과학과',
-        interest:['biology'],
-        activity:['experiment'],
-        subject:['bio'],
-        experience:['research'],
-        desc:'분자생물학·세포생물학.',
-        summary:'생명 현상에 대한 기초 이론과 실험기술, 분석 방법을 학습합니다.',
-        jobs:'기초 연구원, 실험연구원, 교육 분야',
-        skills:'실험설계, 현미경, 분자생물 기법, 실험데이터 분석'
-      },
-      {
-        name:'생명정보학과',
-        interest:['biology','ai'],
-        activity:['analysis'],
-        subject:['bio','cs','math'],
-        experience:['research'],
-        desc:'유전체·오믹스 데이터 분석.',
-        summary:'유전체 및 오믹스 데이터 처리와 생물정보 분석 알고리즘을 배웁니다.',
-        jobs:'생명정보 분석가, 바이오인포매틱스 연구원, 제약 데이터 과학자',
-        skills:'Python/R, 바이오데이터 처리, 통계, 시퀀싱 해석'
-      },
-      {
-        name:'의생명공학과',
-        interest:['biology','chemistry'],
-        activity:['experiment'],
-        subject:['bio','chemistry'],
-        experience:['research','industry'],
-        desc:'의료기술·재생의학 연구.',
-        summary:'의료용 바이오재료, 재생의학, 임상시험 기초를 학습합니다.',
-        jobs:'의료기술 연구원, 바이오소재 개발자, 제약 연구원',
-        skills:'조직공학, 생체재료, 실험설계, 데이터분석'
-      },
-      {
-        name:'제약학과',
-        interest:['biology','chemistry'],
-        activity:['experiment'],
-        subject:['bio','chemistry'],
-        experience:['industry'],
-        desc:'약물개발·임상·제조.',
-        summary:'약물의 작용기전, 합성, 분석 및 임상 개발 과정을 다룹니다.',
-        jobs:'제약 R&D, 품질관리, 임상시험 관리자',
-        skills:'약물분석, 합성화학, 규제지식(GMP), 분석기기 운영'
-      },
-      {
-        name:'간호학과',
-        interest:['biology','health'],
-        activity:['practical'],
-        subject:['bio'],
-        experience:['industry'],
-        desc:'임상간호·보건관리·실무.',
-        summary:'임상 실습 중심의 간호술기, 환자관리, 의료윤리를 학습합니다.',
-        jobs:'임상간호사, 병동간호, 보건소 실무자',
-        skills:'임상술기, 환자관리, 응급처치, 의료기록'
-      },
-      {
-        name:'치위생학과',
-        interest:['biology','health'],
-        activity:['practical'],
-        subject:['bio'],
-        experience:['industry'],
-        desc:'구강관리·치위생 실무.',
-        summary:'구강위생 및 예방치학, 임상실무 기술을 익힙니다.',
-        jobs:'치위생사, 구강관리 전문가, 보건기관 실무자',
-        skills:'구강검진, 스케일링, 감염관리, 환자상담'
-      },
-      {
-        name:'임상병리학과',
-        interest:['biology'],
-        activity:['experiment'],
-        subject:['bio','chemistry'],
-        experience:['industry'],
-        desc:'검사·분석·진단 기술.',
-        summary:'임상 검사 기술과 진단법, 실험실 운영을 학습합니다.',
-        jobs:'임상병리사, 실험실 분석가, 진단기술 개발자',
-        skills:'혈액학, 조직검사, 분자진단, 실험실 품질관리'
-      },
-      {
-        name:'물리치료학과',
-        interest:['biology','health'],
-        activity:['practical'],
-        subject:['bio'],
-        experience:['industry'],
-        desc:'재활·물리치료 임상.',
-        summary:'재활 평가 및 치료기술, 운동치료 계획 수립을 실무 중심으로 배웁니다.',
-        jobs:'물리치료사, 재활치료사, 스포츠 재활 전문가',
-        skills:'운동처방, 평가기술, 치료기기 운용, 환자관리'
-      },
-      {
-        name:'작업치료학과',
-        interest:['biology','health'],
-        activity:['practical'],
-        subject:['bio'],
-        experience:['industry'],
-        desc:'작업재활·인지치료.',
-        summary:'활동기반 치료와 인지재활 기법을 실습으로 익힙니다.',
-        jobs:'작업치료사, 전문 재활치료사, 학교 및 병원 근무',
-        skills:'작업치료기법, 인지재활, 평가도구 사용, 사례관리'
-      },
-      {
-        name:'의예과',
-        interest:['biology'],
-        activity:['experiment','analysis'],
-        subject:['bio','chemistry'],
-        experience:['research','industry'],
-        desc:'의학 기초·예비과정.',
-        summary:'의학 입문 기초과목(해부학, 생리학 등)과 임상기초를 준비합니다.',
-        jobs:'의대 진학후 의사, 연구의사, 임상의학자',
-        skills:'생물학 기반 이해, 기초 임상지식, 실험실기'
-      },
-      {
-        name:'보건행정학과',
-        interest:['biology','social'],
-        activity:['management'],
-        subject:['soc','econ'],
-        experience:['public','industry'],
-        desc:'의료관리·보건정책.',
-        summary:'병원경영, 보건정책, 의료관리 전반에 관한 행정 능력을 기릅니다.',
-        jobs:'병원관리자, 보건행정가, 정책분석가',
-        skills:'의료경영, 정책분석, 통계, 행정관리'
-      },
-      {
-        name:'보건의료정보학과',
-        interest:['ai','biology'],
-        activity:['analysis'],
-        subject:['cs','bio','math'],
-        experience:['industry','research'],
-        desc:'의료데이터·헬스케어 IT.',
-        summary:'의료 데이터 모델링, 전자의무기록, 헬스케어 IT 시스템을 학습합니다.',
-        jobs:'헬스케어 데이터 분석가, 전자의무기록(SHM) 관리자, 디지털헬스 개발자',
-        skills:'의료데이터, SQL, HL7/FHIR, 데이터시각화, 개인정보보호'
+      /* 의학/보건 계열 (2개 추가) */
+      { series:'의학보건', name:'바이오공학과', interest:['biology'], activity:['experiment','analysis'], subject:['bio','chemistry'], experience:['research','industry'], desc:'유전자공학·단백질·바이오신약.', summary:'분자생물학 기법과 바이오 의약품 개발, 실험 분석 기술을 학습합니다.', jobs:'연구원(바이오), 제약 R&D, QC/QA 엔지니어', skills:'PCR, 세포배양, 단백질분석, 시퀀싱, 데이터 해석' },
+      { series:'의학보건', name:'의생명공학과', interest:['biology','chemistry'], activity:['experiment'], subject:['bio','chemistry'], experience:['research','industry'], desc:'의료기술·재생의학 연구.', summary:'의료용 바이오재료, 재생의학, 임상시험 기초를 학습합니다.', jobs:'의료기술 연구원, 바이오소재 개발자, 제약 연구원', skills:'조직공학, 생체재료, 실험설계, 데이터분석' },
+      { series:'의학보건', name:'간호학과', interest:['biology','health'], activity:['practical'], subject:['bio'], experience:['industry'], desc:'임상간호·보건관리·실무.', summary:'임상 실습 중심의 간호술기, 환자관리, 의료윤리를 학습합니다.', jobs:'임상간호사, 병동간호, 보건소 실무자', skills:'임상술기, 환자관리, 응급처치, 의료기록' },
+      { series:'의학보건', name:'약학과', interest:['biology','chemistry','health'], activity:['experiment','practical'], subject:['chemistry','bio'], experience:['industry','health'], desc:'약물 작용·제약 공정·임상 약학.', summary:'약물의 작용 기전, 제제학, 독성학, 임상 약료 서비스를 학습합니다.', jobs:'약사, 제약 회사 연구원/개발자, 보건 공무원', skills:'화학/생물학 지식, 실험 능력, 약물 상호작용 분석, 복약 지도' },
+      { series:'의학보건', name:'물리치료학과', interest:['health'], activity:['practical'], subject:['bio','physics'], experience:['health'], desc:'재활 치료·운동 역학·신경 물리치료.', summary:'신체 기능 회복을 위한 치료 방법, 운동 역학 및 해부학 지식을 배웁니다.', jobs:'물리치료사, 재활 전문가, 스포츠 트레이너', skills:'해부학 지식, 임상 실습, 운동 분석, 환자 커뮤니케이션' },
 
-      },
-
-      /* 화학 · 재료 · 에너지 · 환경 */
-      {
-        name:'화학공학과',
-        interest:['chemistry'],
-        activity:['experiment','analysis'],
-        subject:['chemistry','math'],
-        experience:['industry'],
-        desc:'공정·촉매·에너지 소재.',
-        summary:'화학공정 설계, 촉매 및 반응공학, 공정 최적화를 학습합니다.',
-        jobs:'공정엔지니어, 공장설계, 소재연구원',
-        skills:'공정시뮬레이션, 반응공학, 공정계측, 품질관리'
-      },
-      {
-        name:'화학과',
-        interest:['chemistry'],
-        activity:['experiment'],
-        subject:['chemistry'],
-        experience:['research'],
-        desc:'유기·무기·분석·물리화학.',
-        summary:'기초화학 이론과 실험기법을 통해 소재 및 반응을 연구합니다.',
-        jobs:'연구원, 분석화학자, 품질관리자',
-        skills:'분석기기(LC/GC), 합성, 분광학, 실험설계'
-      },
-      {
-        name:'재료공학과',
-        interest:['chemistry','electronic'],
-        activity:['experiment'],
-        subject:['chemistry','physics'],
-        experience:['industry'],
-        desc:'금속·세라믹·복합재료 연구.',
-        summary:'신소재 설계, 물성분석, 소재 응용기술을 다룹니다.',
-        jobs:'소재연구원, 공정개발, 배터리/반도체 소재개발',
-        skills:'재료분석, 전기화학, 표면처리, 소재합성'
-      },
-      {
-        name:'나노공학과',
-        interest:['chemistry','electronic'],
-        activity:['experiment'],
-        subject:['physics','chemistry'],
-        experience:['research'],
-        desc:'나노소재·나노디바이스.',
-        summary:'나노스케일 소재와 소자, 나노제조기술을 연구합니다.',
-        jobs:'나노소재 연구원, 반도체/센서 개발자, 응용연구원',
-        skills:'나노패터닝, 전자현미경, 계측기술, 표면화학'
-      },
-      {
-        name:'에너지공학과',
-        interest:['chemistry','electronic'],
-        activity:['experiment','analysis'],
-        subject:['physics','chemistry'],
-        experience:['industry'],
-        desc:'재생에너지·배터리 기술.',
-        summary:'태양광, 풍력, 수소 및 전지 기술 등 에너지 변환과 저장기술을 다룹니다.',
-        jobs:'에너지시스템 엔지니어, 배터리 개발자, 재생에너지 연구원',
-        skills:'전기화학, 배터리 셀 설계, PV 시스템, 에너지관리'
-      },
-      {
-        name:'환경공학과',
-        interest:['env','chemistry'],
-        activity:['experiment','analysis'],
-        subject:['chemistry','bio'],
-        experience:['research','industry'],
-        desc:'수질·대기·폐기물 관리.',
-        summary:'환경오염 측정, 정화 기술, 지속가능한 자원관리 기술을 학습합니다.',
-        jobs:'환경엔지니어, 환경 컨설턴트, 규제 준수 전문가',
-        skills:'환경분석, 수처리공정, 대기오염 모델링, 규제이해'
-      },
-      {
-        name:'해양공학과',
-        interest:['env','physics'],
-        activity:['experiment'],
-        subject:['physics','math'],
-        experience:['research','industry'],
-        desc:'해양구조·해양에너지.',
-        summary:'해양구조물 설계, 해양에너지, 해양자원 개발 기술을 다룹니다.',
-        jobs:'해양구조 엔지니어, 해양에너지 연구개발, 해운관련 기술자',
-        skills:'해양구조해석, CAD, 해양환경 데이터분석'
-      },
-      {
-        name:'지구환경과학과',
-        interest:['env','chemistry'],
-        activity:['analysis','experiment'],
-        subject:['chemistry','bio'],
-        experience:['research'],
-        desc:'기후·지질·환경 분석.',
-        summary:'기후변화, 지구시스템, 지구환경 데이터 분석을 학습합니다.',
-        jobs:'환경연구원, 기후데이터 분석가, 지질탐사 연구원',
-        skills:'GIS, 원격탐사, 데이터분석, 지구물리학'
-      },
-      {
-        name:'신소재공학과',
-        interest:['chemistry','electronic'],
-        activity:['experiment'],
-        subject:['chemistry','physics'],
-        experience:['industry'],
-        desc:'첨단소재·바이오소재 개발.',
-        summary:'신소재 설계와 응용, 전자재료 및 바이오소재 개발 기술을 학습합니다.',
-        jobs:'신소재 연구개발, 소재 평가, 제품개발 엔지니어',
-        skills:'재료합성, 계면분석, 전기/전자특성 측정'
-      },
-
-      /* 건축 · 도시 · 디자인 · 예술 · 미디어 */
-      {
-        name:'건축학과',
-        interest:['design'],
-        activity:['build','creative'],
-        subject:['art','math'],
-        experience:['industry'],
-        desc:'건축설계·구조·도시계획.',
-        summary:'건축설계와 구조, 시공 관리 및 도시계획의 기초를 실무 중심으로 배웁니다.',
-        jobs:'건축가, 설계사, 시공관리자, 도시계획가',
-        skills:'CAD, 모델링(SketchUp), 건축구조 이해, 렌더링'
-      },
-      {
-        name:'도시공학과',
-        interest:['design','env'],
-        activity:['analysis','management'],
-        subject:['math','soc'],
-        experience:['industry','public'],
-        desc:'도시계획·교통·인프라 설계.',
-        summary:'도시계획, 교통공학, 인프라 설계 및 도시재생 정책을 학습합니다.',
-        jobs:'도시계획가, 교통엔지니어, 지자체 정책분석가',
-        skills:'GIS, 교통시뮬레이션, 계획수립, 정책분석'
-      },
-      {
-        name:'산업디자인학과',
-        interest:['design'],
-        activity:['creative','build'],
-        subject:['art'],
-        experience:['industry'],
-        desc:'제품디자인·사용자경험 디자인.',
-        summary:'제품 디자인과 프로토타입 제작, 사용자 경험 디자인을 통합적으로 학습합니다.',
-        jobs:'제품디자이너, UX 디자이너, 프로덕트 디자이너',
-        skills:'스케치, 3D 모델링, 프로토타입, UX 리서치, 재료지식'
-      },
-      {
-        name:'시각디자인학과',
-        interest:['design'],
-        activity:['creative'],
-        subject:['art'],
-        experience:['industry'],
-        desc:'그래픽·브랜딩·UI 디자인.',
-        summary:'브랜딩, 그래픽, UI 설계 등 시각커뮤니케이션 전반을 실무 중심으로 배웁니다.',
-        jobs:'그래픽 디자이너, 브랜딩 전문가, UI 디자이너',
-        skills:'Photoshop, Illustrator, 타이포그래피, 브랜딩전략'
-      },
-      {
-        name:'영상애니메이션학과',
-        interest:['design'],
-        activity:['creative'],
-        subject:['art'],
-        experience:['industry'],
-        desc:'영상제작·모션그래픽·애니메이션.',
-        summary:'영상 제작, 애니메이션 기법, 모션그래픽과 후반 작업 기술을 배웁니다.',
-        jobs:'영상편집자, 2D/3D 애니메이터, 모션그래퍼',
-        skills:'After Effects, Maya/Blender, 편집, 스토리보드, 렌더링'
-      },
-      {
-        name:'미디어커뮤니케이션학과',
-        interest:['design','social'],
-        activity:['creative','analysis'],
-        subject:['soc','art'],
-        experience:['industry'],
-        desc:'콘텐츠·저널리즘·PR.',
-        summary:'미디어 이론, 콘텐츠 제작, PR전략, 소셜미디어 운영을 학습합니다.',
-        jobs:'콘텐츠 기획자, 기자, PR/마케팅 담당자',
-        skills:'스토리텔링, 영상제작, PR전략, 소셜미디어 운영'
-      },
-      {
-        name:'공연예술학과',
-        interest:['design'],
-        activity:['creative'],
-        subject:['art'],
-        experience:['industry'],
-        desc:'무대·연극·뮤지컬·공연기획.',
-        summary:'연기, 연출, 무대기술 및 공연기획 전반을 실습 중심으로 배웁니다.',
-        jobs:'연기자, 연출가, 공연 기획자, 무대기술자',
-        skills:'연기기법, 무대제작, 음향/조명기술, 공연운영'
-      },
-      {
-        name:'패션디자인학과',
-        interest:['design'],
-        activity:['creative'],
-        subject:['art'],
-        experience:['industry'],
-        desc:'의상디자인·패션비즈니스.',
-        summary:'의상 디자인과 패션 비즈니스, 생산관리 등을 학습합니다.',
-        jobs:'패션디자이너, 브랜드 매니저, 스타일리스트',
-        skills:'드레이핑, 패턴메이킹, 브랜드기획, 소재이해'
-      },
-      {
-        name:'음악과',
-        interest:['design'],
-        activity:['creative'],
-        subject:['art'],
-        experience:['industry'],
-        desc:'작곡·연주·음악이론.',
-        summary:'음악 이론과 실기, 작곡 및 공연 제작 기술을 배웁니다.',
-        jobs:'연주자, 작곡가, 음악 프로듀서, 음악교사',
-        skills:'악기연습, 작곡, 편곡, 음악이론, DAW'
-      },
-      {
-        name:'문예창작학과',
-        interest:['social','design'],
-        activity:['creative'],
-        subject:['korean'],
-        experience:['research','industry'],
-        desc:'소설·시·시나리오 창작.',
-        summary:'창작 실습과 문학 이론을 기반으로 다양한 글쓰기 역량을 기릅니다.',
-        jobs:'작가, 시나리오 작가, 편집자, 카피라이터',
-        skills:'창작기법, 편집, 스토리텔링, 문체연습'
-      },
-      {
-        name:'광고홍보학과',
-        interest:['business','design'],
-        activity:['creative','management'],
-        subject:['econ','art'],
-        experience:['industry'],
-        desc:'브랜딩·캠페인 기획.',
-        summary:'광고기획, 브랜드 전략, 캠페인 운영 및 마케팅 커뮤니케이션을 학습합니다.',
-        jobs:'광고기획자, 브랜드매니저, PR컨설턴트',
-        skills:'카피라이팅, 캠페인 기획, 마케팅 전략, 데이터 분석'
-      },
-      {
-        name:'사진영상학과',
-        interest:['design'],
-        activity:['creative'],
-        subject:['art'],
-        experience:['industry'],
-        desc:'사진촬영·편집·영상기술.',
-        summary:'촬영 기술과 후작업, 영상 스토리텔링을 중심으로 실무를 익힙니다.',
-        jobs:'포토그래퍼, 영상촬영감독, 편집자',
-        skills:'카메라 운영, 조명, 편집(프리미어), 색보정'
-      },
-
-      /* 인문 · 사회 · 교육 · 법 */
-      {
-        name:'심리학과',
-        interest:['social'],
-        activity:['analysis'],
-        subject:['korean','soc'],
-        experience:['research','teaching'],
-        desc:'인지·상담·임상·발달 심리.',
-        summary:'심리 이론과 실험, 상담기법 및 심리 평가를 학습합니다.',
-        jobs:'심리상담가, 산업/조직 심리사, 연구원',
-        skills:'심리평가, 상담기법, 통계분석(SPSS/R), 실험설계'
-      },
-      {
-        name:'사회학과',
-        interest:['social'],
-        activity:['analysis'],
-        subject:['soc','korean'],
-        experience:['research'],
-        desc:'사회구조·문화·집단 분석.',
-        summary:'사회현상 분석, 조사방법론, 이론적 틀을 통해 사회문제를 연구합니다.',
-        jobs:'사회조사분석가, 정책연구원, NGO 활동가',
-        skills:'설문분석, 통계, 질적연구, 리포트 작성'
-      },
-      {
-        name:'정치외교학과',
-        interest:['social'],
-        activity:['analysis'],
-        subject:['soc'],
-        experience:['public','research'],
-        desc:'정치제도·국제관계·외교정책.',
-        summary:'정치이론과 국제관계, 외교정책 분석을 통해 국제무대에서의 대응력을 키웁니다.',
-        jobs:'외교관, 정책분석가, 국제기구 직원',
-        skills:'국제관계 지식, 정책분석, 논리적 글쓰기, 외국어'
-      },
-      {
-        name:'법학과',
-        interest:['social'],
-        activity:['analysis','management'],
-        subject:['korean','soc'],
-        experience:['industry','public'],
-        desc:'민법·형법·행정법 등 법학 전반.',
-        summary:'법이론과 사례분석을 통해 법적 사고와 문제해결 능력을 기릅니다.',
-        jobs:'변호사, 판사, 공공기관 법무담당자, 법률고문',
-        skills:'법리분석, 논리적 사고, 문서작성, 그룹토론'
-      },
-      {
-        name:'행정학과',
-        interest:['social'],
-        activity:['management'],
-        subject:['soc'],
-        experience:['public'],
-        desc:'공공정책·행정관리·지방정부.',
-        summary:'공공관리, 정책분석, 행정법 및 조직관리 기술을 학습합니다.',
-        jobs:'공무원, 정책분석가, 공공기관 관리자',
-        skills:'정책분석, 통계, 행정법, 보고서작성'
-      },
-      {
-        name:'교육학과',
-        interest:['social'],
-        activity:['teaching'],
-        subject:['korean','soc'],
-        experience:['teaching'],
-        desc:'교육이론·교육행정·교수법.',
-        summary:'교육이론과 교육과정, 교수법 및 교육평가를 학습합니다.',
-        jobs:'교사, 교육연구원, 교육컨설턴트',
-        skills:'수업설계, 평가기법, 교육심리, 커뮤니케이션'
-      },
-      {
-        name:'국어국문학과',
-        interest:['social'],
-        activity:['analysis','creative'],
-        subject:['korean'],
-        experience:['teaching','research'],
-        desc:'문학·언어·텍스트 분석.',
-        summary:'문학작품 분석, 글쓰기 및 텍스트 연구 능력을 기릅니다.',
-        jobs:'교사, 출판편집자, 작가, 콘텐츠 기획자',
-        skills:'비평적 읽기, 글쓰기, 번역, 편집'
-      },
-      {
-        name:'영어영문학과',
-        interest:['social'],
-        activity:['analysis','creative'],
-        subject:['korean'],
-        experience:['teaching','research'],
-        desc:'영문학·번역·영어교육.',
-        summary:'영미문학, 번역, 언어학적 지식을 기반으로 다국어 소통 능력을 배웁니다.',
-        jobs:'번역가, 영어교사, 국제교류 담당자',
-        skills:'영어능력, 번역, 문법분석, 문학비평'
-      },
-      {
-        name:'언론정보학과',
-        interest:['social','design'],
-        activity:['creative','analysis'],
-        subject:['soc','korean'],
-        experience:['industry'],
-        desc:'저널리즘·미디어 연구·콘텐츠 생성.',
-        summary:'보도·콘텐츠 제작 기술과 미디어 이론, 디지털 미디어 운영을 학습합니다.',
-        jobs:'기자, 콘텐츠 에디터, 방송PD, 소셜미디어 매니저',
-        skills:'취재, 영상편집, 기사작성, 디지털콘텐츠 기획'
-      },
-      {
-        name:'사회복지학과',
-        interest:['social'],
-        activity:['practical','management'],
-        subject:['soc'],
-        experience:['industry','public'],
-        desc:'복지정책·사회서비스·상담실무.',
-        summary:'사회복지 이론과 사례, 상담기법 및 프로그램 운영을 배웁니다.',
-        jobs:'사회복지사, 상담사, 복지기관 운영자',
-        skills:'상담기술, 사례관리, 정책이해, 주민연계'
-      },
-
-      /* 경영 · 경제 · 금융 · 무역 */
-      {
-        name:'경영학과',
-        interest:['business'],
-        activity:['management'],
-        subject:['econ','math'],
-        experience:['industry','startup'],
-        desc:'조직관리·마케팅·재무·전략.',
-        summary:'경영의 기초(재무·마케팅·조직·전략)를 학습하고 실무적 문제 해결 능력을 기릅니다.',
-        jobs:'기획자, 마케팅 매니저, 전략 컨설턴트, 창업가',
-        skills:'재무분석, 마케팅, 전략기획, 데이터분석, 프레젠테이션'
-      },
-      {
-        name:'경제학과',
-        interest:['business'],
-        activity:['analysis'],
-        subject:['econ','math'],
-        experience:['research','industry'],
-        desc:'경제이론·계량분석·정책연구.',
-        summary:'거시·미시경제 이론과 계량경제 분석으로 경제전반을 분석합니다.',
-        jobs:'경제분석가, 정책연구원, 금융분석가',
-        skills:'계량분석(R/Stata), 경제모형, 데이터해석, 정책분석'
-      },
-      {
-        name:'회계학과',
-        interest:['business'],
-        activity:['analysis'],
-        subject:['math','econ'],
-        experience:['industry'],
-        desc:'재무회계·관리회계·세무.',
-        summary:'회계원리, 재무제표 분석, 세무실무 등 기업회계 전반을 다룹니다.',
-        jobs:'회계사, 세무사 보조, 재무분석가, ERP운영자',
-        skills:'재무제표분석, 세무지식, Excel, 회계시스템'
-      },
-      {
-        name:'금융공학과',
-        interest:['business','ai'],
-        activity:['analysis'],
-        subject:['math','cs','econ'],
-        experience:['industry'],
-        desc:'퀀트모델·리스크 관리.',
-        summary:'금융수학, 계량분석, 파생상품 및 리스크 관리 모델을 학습합니다.',
-        jobs:'퀀트 개발자, 리스크 애널리스트, 금융 데이터 과학자',
-        skills:'Python, R, 확률/통계, 금융모델링, 시계열분석'
-      },
-      {
-        name:'무역학과',
-        interest:['business'],
-        activity:['management'],
-        subject:['econ','soc'],
-        experience:['industry'],
-        desc:'국제무역·물류·통상.',
-        summary:'국제무역 이론과 실무, 통상정책 및 물류관리 역량을 키웁니다.',
-        jobs:'무역실무자, 수출입매니저, 무역컨설턴트',
-        skills:'무역실무, 영어커뮤니케이션, 통관절차, 무역계약'
-      },
-      {
-        name:'창업벤처학과',
-        interest:['business','startup'],
-        activity:['startup','management'],
-        subject:['econ','cs'],
-        experience:['startup'],
-        desc:'창업·비즈니스 모델 설계.',
-        summary:'비즈니스 모델 캔버스와 시장검증, 투자유치 역량을 실습 중심으로 학습합니다.',
-        jobs:'스타트업 창업가, 비즈니스 디벨로퍼, 액셀러레이터 심사관',
-        skills:'비즈니스모델 설계, 피치덱, 시장조사, 성장전략'
-      },
-      {
-        name:'마케팅학과',
-        interest:['business'],
-        activity:['creative','analysis'],
-        subject:['econ'],
-        experience:['industry'],
-        desc:'브랜드·광고·소비자 분석.',
-        summary:'소비자 행동과 데이터 기반 마케팅 전략, 디지털 마케팅을 배웁니다.',
-        jobs:'마케팅 매니저, 브랜드 매니저, 디지털 마케터',
-        skills:'시장조사, GA/분석, 컨텐츠 기획, 캠페인 운영'
-      },
-      {
-        name:'산업공학과',
-        interest:['business','ai','software'],
-        activity:['analysis','management'],
-        subject:['math','cs'],
-        experience:['industry'],
-        desc:'시스템 최적화·운영리서치.',
-        summary:'생산 및 서비스 시스템의 최적화, 운영리서치, 데이터 분석을 학습합니다.',
-        jobs:'공정혁신 엔지니어, 데이터 애널리스트, 컨설팅',
-        skills:'운영리서치, 시뮬레이션, Python, 최적화 기법, Lean'
-      },
-      {
-        name:'국제통상학과',
-        interest:['business'],
-        activity:['management'],
-        subject:['econ','korean'],
-        experience:['industry'],
-        desc:'무역정책·글로벌 비즈니스.',
-        summary:'국제 무역 및 통상정책, 글로벌 비즈니스 운영 역량을 배웁니다.',
-        jobs:'무역전문가, 국제통상 담당자, 해외영업',
-        skills:'국제무역실무, 무역계약, 외국어, 시장분석'
-      },
-      {
-        name:'물류유통학과',
-        interest:['business'],
-        activity:['management','analysis'],
-        subject:['econ','math'],
-        experience:['industry'],
-        desc:'공급망·유통전략.',
-        summary:'공급망 관리, 물류 최적화, 유통전략 및 물류IT 시스템을 학습합니다.',
-        jobs:'물류기획자, SCM 담당자, 창고운영 관리자',
-        skills:'SCM, 물류시뮬레이션, ERP, 재고관리, 데이터분석'
-      },
-
-      /* 특수 및 융합 전공 (대표적 일부) */
-      {
-        name:'스포츠공학과',
-        interest:['robot','design'],
-        activity:['build','experiment'],
-        subject:['physics','math'],
-        experience:['industry'],
-        desc:'스포츠기기·운동역학·데이터 분석.',
-        summary:'운동역학과 스포츠 기기 설계, 퍼포먼스 데이터 분석을 다룹니다.',
-        jobs:'스포츠 장비 개발자, 퍼포먼스 분석가, 재활기술자',
-        skills:'운동역학, 센서분석, 데이터분석, 제품설계'
-      },
-      {
-        name:'식품과학과',
-        interest:['biology','chemistry'],
-        activity:['experiment'],
-        subject:['chemistry','bio'],
-        experience:['industry'],
-        desc:'식품공학·안전·영양 연구.',
-        summary:'식품공정, 안전성검사, 영양학을 기반으로 제품개발을 실습합니다.',
-        jobs:'식품연구원, 품질관리자, 제품개발자',
-        skills:'식품분석, 미생물 검사, 공정설계, 품질관리'
-      },
-      {
-        name:'농업생명공학과',
-        interest:['biology','env'],
-        activity:['experiment','analysis'],
-        subject:['bio','chemistry'],
-        experience:['industry','research'],
-        desc:'스마트농업·작물개량·생물자원.',
-        summary:'농업 생명공학 기술과 스마트농업 적용을 실습 중심으로 배웁니다.',
-        jobs:'작물개량연구원, 스마트팜 엔지니어, 농업기술 컨설턴트',
-        skills:'분자육종, 센서응용, 농업데이터 분석'
-      },
-      {
-        name:'항만물류학과',
-        interest:['business','env'],
-        activity:['management'],
-        subject:['econ','soc'],
-        experience:['industry'],
-        desc:'항만·해상물류·해운비즈니스.',
-        summary:'항만 운영과 물류관리, 해운산업의 비즈니스 모델을 학습합니다.',
-        jobs:'항만운영자, 물류기획자, 해운사 운영자',
-        skills:'물류관리, 해운실무, 포워딩, 국제통관'
-      },
-      {
-        name:'도시계획·부동산학과',
-        interest:['design','business'],
-        activity:['analysis','management'],
-        subject:['soc','math'],
-        experience:['industry','public'],
-        desc:'도시정책·부동산 개발·계획.',
-        summary:'도시개발, 부동산 투자분석, 정책수립을 학습합니다.',
-        jobs:'도시계획가, 부동산 개발자, 자산관리 전문가',
-        skills:'부동산분석, GIS, 재무분석, 계획수립'
-      },
-      {
-        name:'문화재보존학과',
-        interest:['design','social'],
-        activity:['experiment','analysis'],
-        subject:['art','soc'],
-        experience:['research'],
-        desc:'유물 보존·복원·문화자원관리.',
-        summary:'문화재의 보존·복원 기술 및 문화자원 관리 방법을 실습합니다.',
-        jobs:'문화재보존가, 전시기획자, 연구원',
-        skills:'복원기술, 재료분석, 보존처리, 전시기획'
-      },
-      {
-        name:'항공서비스학과',
-        interest:['social','business'],
-        activity:['practical','management'],
-        subject:['korean','soc'],
-        experience:['industry'],
-        desc:'항공운항·서비스 매니지먼트.',
-        summary:'항공 서비스 운영, 객실승무 및 항공 비즈니스 운영을 학습합니다.',
-        jobs:'항공승무원, 항공사 운영자, 지상직',
-        skills:'고객응대, 서비스 운영, 항공안전, 외국어'
-      },
-      {
-        name:'관광경영학과',
-        interest:['business'],
-        activity:['management','creative'],
-        subject:['econ','korean'],
-        experience:['industry'],
-        desc:'여행·관광·호스피탈리티 산업.',
-        summary:'관광경영, 호스피탈리티 운영 및 관광마케팅을 배웁니다.',
-        jobs:'여행사 운영자, 호텔운영, 관광마케터',
-        skills:'서비스운영, 마케팅, 예약시스템, 고객관리'
-      },
-      {
-        name:'소셜벤처학과',
-        interest:['business','social'],
-        activity:['startup','management'],
-        subject:['econ','soc'],
-        experience:['startup','public'],
-        desc:'사회적 가치 기반 창업·프로젝트.',
-        summary:'사회문제 해결형 사업 모델과 지속가능한 운영 방안을 학습합니다.',
-        jobs:'소셜벤처 창업가, 프로젝트 매니저, NGO 운영자',
-        skills:'사회혁신, 비즈니스모델, 펀딩, 이해관계자관리'
-      },
-      {
-        name:'공공정책학과',
-        interest:['social','public'],
-        activity:['analysis','management'],
-        subject:['soc','econ'],
-        experience:['public','research'],
-        desc:'정책분석·정부·NGO 실무.',
-        summary:'정책분석과 공공행정, 통계기반 정책평가 기법을 다룹니다.',
-        jobs:'정책분석가, 공무원, NGO 연구원',
-        skills:'정책분석, 통계, 연구방법론, 보고서작성'
-      },
-      {
-        name:'통계학과',
-        interest:['ai','math'],
-        activity:['analysis'],
-        subject:['math'],
-        experience:['research','industry'],
-        desc:'확률·통계·데이터모델링.',
-        summary:'확률이론과 통계분석, 데이터모델링 및 추정기법을 학습합니다.',
-        jobs:'데이터 애널리스트, 통계분석가, 연구원',
-        skills:'R/Python, 통계모델, 베이즈, 계량분석, 시계열분석'
-      },
-      {
-        name:'응용수학과',
-        interest:['math','ai'],
-        activity:['analysis'],
-        subject:['math'],
-        experience:['research'],
-        desc:'수치해석·모델링·최적화.',
-        summary:'수치해석, 모델링 및 최적화 이론을 기반으로 응용문제를 해결합니다.',
-        jobs:'금융수학자, 연구원, 모델개발자',
-        skills:'수치해석, 최적화, 프로그래밍, 수리통계'
-      }
-    ];
-
-/* 한국어 표시 변환 테이블: 세분화된 선택지 추가 반영 */
-const dict = {
-  math:"수학", cs:"컴퓨터과학", physics:"물리", econ:"경제", korean:"국어/언어", art:"미술/예체능",
-  chemistry:"화학", bio:"생물/생명", soc:"사회/윤리",
-  ai:"AI", software:"소프트웨어", robot:"로봇/기계", business:"경영/비즈니스", electronic:"전자/전기",
-  design:"디자인", social:"인문/사회과학", biology:"바이오/생명", env:"환경/에너지",
-  analysis:"분석", build:"제작/구현", experiment:"실험/관찰", creative:"창의/예술",
-  teaching:"교육", management:"관리/기획", practical:"실무/실습", startup:"창업/벤처",
-  industry:"산업/기업체", research:"연구/학계", public:"공공기관/정책", health:"건강/의료",
-  liberal:"인문학",
-};
-
-/* Step 정의: 세분화된 선택지 추가 반영 */
-const steps = [
-  { key:"subject", title:"좋아하는 과목을 선택하세요 (다중선택 가능)", 
-    options:['math','cs','physics','chemistry','bio','econ','soc','korean','art'] },
-  { key:"interest", title:"관심 분야를 선택하세요 (다중선택 가능)", 
-    options:['ai','software','robot','electronic','design','business','biology','social','env'] },
-  { key:"activity", title:"선호하는 활동 스타일을 선택하세요 (다중선택 가능)", 
-    options:['analysis','build','experiment','creative','management','practical','teaching','startup'] },
-  { key:"experience", title:"선호하는 경험 또는 진로 유형을 선택하세요 (다중선택 가능)", 
-    options:['industry','research','public','startup','health','liberal'] }
+      /* 예체능 계열 (2개 추가) */
+      { series:'예체능', name:'산업디자인학과', interest:['design'], activity:['creative','build'], subject:['art'], experience:['industry'], desc:'제품디자인·사용자경험 디자인.', summary:'제품 디자인과 프로토타입 제작, 사용자 경험 디자인을 통합적으로 학습합니다.', jobs:'제품디자이너, UX 디자이너, 프로덕트 디자이너', skills:'스케치, 3D 모델링, 프로토타입, UX 리서치, 재료지식' },
+      { series:'예체능', name:'시각디자인학과', interest:['design'], activity:['creative'], subject:['art'], experience:['industry'], desc:'그래픽·브랜딩·UI 디자인.', summary:'브랜딩, 그래픽, UI 설계 등 시각커뮤니케이션 전반을 실무 중심으로 배웁니다.', jobs:'그래픽 디자이너, 브랜딩 전문가, UI 디자이너', skills:'Photoshop, Illustrator, 타이포그래피, 브랜딩전략' },
+      { series:'예체능', name:'음악과', interest:['design'], activity:['creative'], subject:['art'], experience:['industry'], desc:'작곡·연주·음악이론.', summary:'음악 이론과 실기, 작곡 및 공연 제작 기술을 배웁니다.', jobs:'연주자, 작곡가, 음악 프로듀서, 음악교사', skills:'악기연습, 작곡, 편곡, 음악이론, DAW' },
+      { series:'예체능', name:'체육교육과', interest:['health'], activity:['teaching','practical'], subject:['art','bio'], experience:['teaching','health'], desc:'운동 생리학·체육 교육론·스포츠 지도.', summary:'운동 생리학, 체육 심리, 지도법 등 체육 교육 전반을 학습합니다.', jobs:'체육 교사, 스포츠 강사, 운동 처방사', skills:'스포츠 지도 능력, 운동 과학 지식, 교육학, 안전 관리' },
+      { series:'예체능', name:'회화과', interest:['design'], activity:['creative'], subject:['art'], experience:['research','industry'], desc:'드로잉·유화·현대미술 연구.', summary:'다양한 재료를 활용한 창의적인 회화 작업과 미술 이론을 학습합니다.', jobs:'화가, 미술 작가, 미술 교육자, 큐레이터', skills:'드로잉, 색채 이론, 작품 제작 능력, 미술사 이해' }
 ];
 
+// 한국어 표시 변환 딕셔너리
+const dict = {
+  // 카테고리 이름
+  weight: "중요도 설정", subject: "좋아하는 과목", disliked_subject: "싫어하는 과목", interest: "관심 분야", activity: "활동 스타일", experience: "진로 유형",
+  
+  // 키워드 이름
+  math:"수학", cs:"컴퓨터과학", physics:"물리", econ:"경제", korean:"국어/언어", art:"미술/예체능", chemistry:"화학", bio:"생물/생명", soc:"사회/윤리",
+  ai:"AI", software:"소프트웨어", robot:"로봇/기계", business:"경영/비즈니스", electronic:"전자/전기", design:"디자인", social:"인문/사회과학", biology:"바이오/생명", env:"환경/에너지",
+  analysis:"분석", build:"제작/구현", experiment:"실험/관찰", creative:"창의/예술", teaching:"교육", management:"관리/기획", practical:"실무/실습", startup:"창업/벤처",
+  industry:"산업/기업체", research:"연구/학계", public:"공공기관/정책", health:"건강/의료", liberal:"인문학",
+};
+
+// 단계 정의: Weight 설정 및 싫어하는 과목 질문 추가 (총 6단계)
+const steps = [
+  { key:"weight", title:"각 카테고리의 중요도를 설정해주세요", type: "weight_setting" }, // Step 0
+  { key:"subject", title:"좋아하는 과목을 선택하세요", type: "multiple_choice",
+    options:['math','cs','physics','chemistry','bio','econ','soc','korean','art'] }, // Step 1
+  { key:"disliked_subject", title:"[감점] 특히 싫어하거나 피하고 싶은 과목을 선택하세요 (선택 시 감점)", type: "multiple_choice",
+    options:['math','cs','physics','chemistry','bio','econ','soc','korean','art'] }, // Step 2
+  { key:"interest", title:"관심 분야를 선택하세요", type: "multiple_choice",
+    options:['ai','software','robot','electronic','design','business','biology','social','env'] }, // Step 3
+  { key:"activity", title:"선호하는 활동 스타일을 선택하세요", type: "multiple_choice",
+    options:['analysis','build','experiment','creative','management','practical','teaching','startup'] }, // Step 4
+  { key:"experience", title:"선호하는 경험 또는 진로 유형을 선택하세요", type: "multiple_choice",
+    options:['industry','research','public','startup','health','liberal'] } // Step 5
+];
+
+/* * -----------------------------------------------------------------------
+ * 2. 전역 상태 변수 및 Local Storage 관리
+ * -----------------------------------------------------------------------
+ */
+
 let stepIndex = 0;
-let selected = { subject:[], interest:[], activity:[], experience:[] };
+// 사용자의 선택 결과를 저장하는 객체
+let selected = { subject:[], interest:[], activity:[], experience:[], disliked_subject:[] };
+// 가중치 값 저장 객체 (기본값은 1)
+let weights = { subject: 1, interest: 1, activity: 1, experience: 1 };
 
-function renderStep() {
-  const step = steps[stepIndex];
-  document.getElementById("title").innerText = step.title;
-  const box = document.getElementById("options");
-  box.innerHTML = "";
 
-  step.options.forEach(o => {
-    const div = document.createElement("div");
-    div.className = "option";
-    div.innerText = dict[o];
-    if(selected[step.key].includes(o)) div.classList.add("active");
-    div.onclick = () => {
-      div.classList.toggle("active");
-      if(div.classList.contains("active")) selected[step.key].push(o);
-      else selected[step.key] = selected[step.key].filter(v => v !== o);
-    };
-    box.appendChild(div);
-  });
-
-  document.getElementById("backBtn").style.display = stepIndex === 0 ? "none" : "block";
-  document.getElementById("nextBtn").innerText = (stepIndex < steps.length - 1) ? "다음" : "결과 보기";
+/**
+ * 현재 상태를 Local Storage에 저장합니다.
+ */
+function saveState() {
+  localStorage.setItem('recommendationState', JSON.stringify({ stepIndex, selected, weights }));
 }
 
-function prevStep() { stepIndex--; renderStep(); }
-
-function nextStep() {
-  if (selected[steps[stepIndex].key].length === 0) {
-    alert("1개 이상 선택해야 합니다.");
-    return;
+/**
+ * Local Storage에서 상태를 불러옵니다.
+ */
+function loadState() {
+  const savedState = localStorage.getItem('recommendationState');
+  if (savedState) {
+    const state = JSON.parse(savedState);
+    stepIndex = state.stepIndex || 0;
+    // selected 객체의 속성이 누락될 경우를 대비하여 기본값과 병합
+    selected = { 
+        subject: state.selected.subject || [], 
+        interest: state.selected.interest || [], 
+        activity: state.selected.activity || [], 
+        experience: state.selected.experience || [], 
+        disliked_subject: state.selected.disliked_subject || [] 
+    };
+    weights = state.weights || { subject: 1, interest: 1, activity: 1, experience: 1 };
   }
+}
+
+/**
+ * 가중치 선택 단계의 HTML을 렌더링합니다. (Step 0)
+ */
+function renderWeightSelection() {
+  const box = document.getElementById("options");
+  box.innerHTML = `<div class="weight-selection"></div>`;
+  const selectionBox = box.querySelector(".weight-selection");
+
+  // 가중치를 설정할 카테고리 목록 (disliked_subject 제외)
+  const weightKeys = ['subject', 'interest', 'activity', 'experience'];
+  const levels = [{ label: "낮음 (1점)", value: 1 }, { label: "보통 (2점)", value: 2 }, { label: "높음 (3점)", value: 3 }];
+
+  weightKeys.forEach(key => {
+    const item = document.createElement("div");
+    item.className = "weight-item";
+    item.innerHTML = `<h4>${dict[key]}</h4><div class="weight-levels"></div>`;
+    
+    const levelsBox = item.querySelector(".weight-levels");
+    levels.forEach(level => {
+      const div = document.createElement("div");
+      div.className = `weight-level ${weights[key] === level.value ? 'active' : ''}`;
+      div.innerText = level.label;
+      div.onclick = () => {
+        // 활성화/비활성화 토글 로직
+        const isActive = div.classList.contains('active');
+        // 같은 버튼을 다시 누르면 비활성화/기본값(1)으로 설정
+        let newValue = 1;
+        if (!isActive || weights[key] !== level.value) {
+            newValue = level.value;
+        }
+
+        // 모든 레벨 버튼 비활성화
+        levelsBox.querySelectorAll('.weight-level').forEach(el => el.classList.remove('active'));
+        
+        if (newValue !== 1) {
+            div.classList.add('active');
+        }
+
+        weights[key] = newValue;
+        saveState(); // 가중치 변경 시 저장
+      };
+      levelsBox.appendChild(div);
+    });
+    selectionBox.appendChild(item);
+  });
+}
+
+
+/**
+ * 현재 단계의 질문과 선택지를 화면에 렌더링합니다.
+ */
+function renderStep() {
+  const step = steps[stepIndex];
+  document.getElementById("title").innerText = `${step.title} (${stepIndex + 1}/${steps.length})`;
+  document.getElementById("result").innerHTML = "";
+
+  // Step 0: 가중치 설정 렌더링
+  if (step.type === "weight_setting") {
+    renderWeightSelection();
+    document.getElementById("options").style.display = 'flex';
+  } 
+  // Step 1~5: 일반 선택지 렌더링
+  else {
+    const box = document.getElementById("options");
+    box.innerHTML = "";
+    document.getElementById("options").style.display = 'flex';
+    
+    // 현재 단계의 선택지가 liked_subject인지 disliked_subject인지에 따라 참조하는 selected 키 변경
+    const currentSelectedKey = step.key;
+    
+    step.options.forEach(o => {
+      const div = document.createElement("div");
+      div.className = "option";
+      div.innerText = dict[o];
+      if(selected[currentSelectedKey].includes(o)) div.classList.add("active");
+      
+      div.onclick = () => {
+        div.classList.toggle("active");
+        if(div.classList.contains("active")) {
+          selected[currentSelectedKey].push(o);
+        } else {
+          selected[currentSelectedKey] = selected[currentSelectedKey].filter(v => v !== o);
+        }
+        saveState(); // 선택 변경 시 저장
+      };
+      box.appendChild(div);
+    });
+  }
+
+  // 버튼 상태 업데이트
+  
+  // 버튼 그룹 HTML 재설정 (결과 화면에서 돌아왔을 때 대비)
+  const buttonGroup = document.getElementById('buttonGroup');
+  if (!document.getElementById('nextBtn')) {
+    buttonGroup.innerHTML = `
+      <button id="backBtn" class="back" onclick="prevStep()">이전</button>
+      <button id="nextBtn" class="next" onclick="nextStep()">다음</button>
+    `;
+  }
+  
+  const backBtn = document.getElementById("backBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  
+  backBtn.style.display = stepIndex === 0 ? "none" : "flex";
+  nextBtn.innerText = (stepIndex < steps.length - 1) ? "다음" : "결과 보기";
+  
+  // 첫 단계에서는 뒤로 버튼을 숨기고 다음 버튼만 중앙에 배치
+  buttonGroup.style.justifyContent = stepIndex === 0 ? 'center' : 'space-between';
+}
+
+/**
+ * 이전 단계로 이동하고 상태를 저장합니다.
+ */
+function prevStep() { 
+  if (stepIndex > 0) {
+    stepIndex--; 
+    renderStep(); 
+    saveState();
+  }
+}
+
+/**
+ * 다음 단계로 이동하거나 결과를 보여줍니다.
+ */
+function nextStep() {
+  // 가중치 설정 단계에서는 선택 유효성 검사 패스
+  if (steps[stepIndex].type !== "weight_setting") {
+    // 모든 선택이 완료된 상태에서 싫어하는 과목을 선택하지 않았더라도 다음으로 넘어갈 수 있게 함
+    if (selected[steps[stepIndex].key].length === 0 && steps[stepIndex].key !== 'disliked_subject') {
+        alert("하나 이상의 선택지를 골라야 다음으로 진행할 수 있습니다.");
+        return;
+    }
+  }
+  
+  saveState(); // 다음 단계로 넘어가기 전에 현재 상태 저장
+  
   if(stepIndex < steps.length - 1) {
-    stepIndex++; renderStep();
+    stepIndex++; 
+    renderStep();
   } else {
     showResult();
   }
 }
 
-/* 추천 로직 (상위 5개 + 100점 환산) */
+/* * -----------------------------------------------------------------------
+ * 3. 결과 계산 및 표시 로직 (가중치, 감점, 상세 분석 포함)
+ * -----------------------------------------------------------------------
+ */
+
+/**
+ * 학과 추천 결과를 계산하고 화면에 표시합니다.
+ */
 function showResult() {
-  document.getElementById("title").innerText = "추천 학과 결과";
+  document.getElementById("title").innerText = "✨ 추천 학과 결과입니다.";
   document.getElementById("options").innerHTML = "";
-  document.getElementById("nextBtn").style.display = "none";
-  document.getElementById("backBtn").style.display = "block";
+  document.getElementById("options").style.display = 'none'; // 선택지 영역 숨김
+  
+  // 버튼을 재시작 버튼으로 변경
+  const buttonGroup = document.getElementById("buttonGroup");
+  buttonGroup.innerHTML = `
+    <button id="restartBtn" class="restart" onclick="restart()">다시 하기</button>
+  `;
+  buttonGroup.style.justifyContent = 'center';
 
   let resultList = [];
+  let maxPossibleScore = 0;
 
-  // 1. 점수 계산
+  // 1. 점수 계산 (가중치 및 감점 적용)
+  
+  // 최대 가능 점수 계산: 각 카테고리의 선택된 항목 수 * 가중치
+  ['subject', 'interest', 'activity', 'experience'].forEach(k => {
+    maxPossibleScore += selected[k].length * weights[k];
+  });
+  
+  // 만약 선택된 항목이 하나도 없다면 (0/0 방지)
+  if (maxPossibleScore === 0) maxPossibleScore = 1;
+
+
   majorDB.forEach(m => {
     let score = 0;
-    Object.keys(selected).forEach(k => {
-      selected[k].forEach(v => { if(m[k].includes(v)) score++; });
+    let matches = {}; // 매칭된 키워드 저장 객체
+
+    // 1-1. 긍정 가중치 점수 합산
+    ['subject', 'interest', 'activity', 'experience'].forEach(k => {
+      const w = weights[k] || 1;
+      matches[k] = { name: dict[k], matches: [] };
+      selected[k].forEach(v => { 
+        if(m[k] && m[k].includes(v)) {
+          score += w;
+          matches[k].matches.push(dict[v]);
+        }
+      });
     });
-    resultList.push({ major:m, score });
+
+    // 1-2. 부정 감점 적용 (싫어하는 과목)
+    matches.disliked_subject = { name: dict.disliked_subject, matches: [] };
+    selected.disliked_subject.forEach(v => {
+        // 해당 학과의 'subject'와 일치하는 싫어하는 과목이 있으면 -3점 감점 (강력한 패널티)
+        if(m.subject && m.subject.includes(v)) { 
+            score -= 3; 
+            matches.disliked_subject.matches.push(dict[v]);
+        }
+    });
+
+    resultList.push({ major:m, score, matches: matches });
   });
 
   // 2. 점수 기준 내림차순 정렬
   resultList.sort((a,b) => b.score - a.score);
 
-  // 3. 최고 점수 확인 (관련도 100%를 위한 기준)
-  const maxScore = Math.max(...resultList.map(r => r.score)) || 1;
-
+  // 3. 최고 점수 확인 (감점 때문에 최고 점수가 음수일 수 있음)
+  const maxScoreFound = Math.max(...resultList.map(r => r.score));
+  
   // 4. 상위 5개 추출
   const top5 = resultList.slice(0,5);
 
   // 5. 결과 HTML 생성
-  let html = `<div class="result-box"><h3>사용자님의 선택과 가장 유사한 학과입니다.</h3></div>`;
+  let html = `<div class="result-box"><h3>사용자님의 ${maxPossibleScore}점 기준 선택을 반영한 학과 추천 결과입니다.</h3></div>`;
   
-  if (top5.length === 0 || top5[0].score === 0) {
-      html += `<div class="major"><h3>😭 일치하는 학과를 찾지 못했습니다.</h3><p>선택지를 더 다양하게 골라보거나, '뒤로' 버튼을 눌러 다시 시도해 보세요.</p></div>`;
+  if (top5.length === 0 || maxScoreFound <= 0) {
+      html += `<div class="major"><h3>😭 일치하는 학과를 찾지 못했습니다.</h3><p>선택지를 더 다양하게 고르거나 '싫어하는 과목'을 해제하고 '다시 하기' 버튼을 눌러 시도해 보세요.</p></div>`;
   } else {
-    top5.forEach(r => {
-      const percent = Math.round((r.score / maxScore) * 100);
+    top5.forEach((r, index) => {
+      // (학과 점수 / 최고 점수) * 100 으로 관련도를 환산합니다. (점수가 음수라도 0%로 표시)
+      const percent = Math.max(0, Math.round((r.score / maxScoreFound) * 100)); 
+      
+      let scoreColor = index === 0 ? '#e54f4f' : '#5169ff';
+      let matchHtml = '';
+
+      // 매칭 키워드 상세 분석 HTML 생성
+      // 긍정 키워드 (가중치 1/2/3)
+      ['subject', 'interest', 'activity', 'experience'].forEach(k => {
+        if (r.matches[k].matches.length > 0) {
+          const keywords = r.matches[k].matches.join(', ');
+          matchHtml += `
+            <p>
+                <b>${r.matches[k].name} 매칭 (가중치 ${weights[k] || 1}):</b> <span>${keywords}</span>
+            </p>
+          `;
+        }
+      });
+
+      // 부정 키워드 (감점)
+      if (r.matches.disliked_subject.matches.length > 0) {
+        const keywords = r.matches.disliked_subject.matches.join(', ');
+        matchHtml += `
+          <p class="negative-match">
+              <b>${r.matches.disliked_subject.name} 매칭 (감점 -3):</b> <span>${keywords}</span>
+          </p>
+        `;
+      }
+
+
       html += `
         <div class="major">
-          <div class="score">✨ 관련도: ${percent} / 100</div>
-          <h3>${r.major.name}</h3>
-          <p>${r.major.desc}</p>
-          <p><b>🔍 학습 내용:</b> ${r.major.summary}</p>
-          <p><b>💼 진로:</b> ${r.major.jobs}</p>
+          <h3>
+            ${r.major.name}
+            <span class="series-tag" style="background:${getSeriesColor(r.major.series)};">${r.major.series} 계열</span>
+          </h3>
+          <div class="score" style="color: ${scoreColor};">🏆 ${index + 1}위 / 최종 점수: ${r.score}점 / 관련도: ${percent} %</div>
+          <p><b>요약:</b> ${r.major.desc}</p>
+          <p><b>🔍 상세 학습:</b> ${r.major.summary}</p>
+          <p><b>💼 주요 진로:</b> ${r.major.jobs}</p>
           <p><b>💡 필요 역량:</b> ${r.major.skills}</p>
+          
+          <div class="match-breakdown">
+            <h4>✨ 추천 분석 (가중치 및 감점 포함)</h4>
+            ${matchHtml}
+          </div>
         </div>
       `;
     });
@@ -1304,8 +636,52 @@ function showResult() {
   document.getElementById("result").innerHTML = html;
 }
 
-renderStep();
-</script>
+/**
+ * 학과 계열별 색상을 반환합니다.
+ */
+function getSeriesColor(series) {
+  switch(series) {
+    case '공학': return '#007bff';
+    case '자연': return '#28a745';
+    case '인문사회': return '#ffc107';
+    case '경영경제': return '#fd7e14';
+    case '의학보건': return '#dc3545';
+    case '예체능': return '#6f42c1';
+    default: return '#777';
+  }
+}
 
+/**
+ * 처음 상태로 되돌리고 재시작합니다.
+ */
+function restart() {
+  stepIndex = 0;
+  selected = { subject:[], interest:[], activity:[], experience:[], disliked_subject:[] };
+  weights = { subject: 1, interest: 1, activity: 1, experience: 1 };
+  
+  localStorage.removeItem('recommendationState'); // 저장된 상태 제거
+  
+  // 버튼 그룹 HTML 재설정
+  document.getElementById('buttonGroup').innerHTML = `
+    <button id="backBtn" class="back" onclick="prevStep()" style="display:none">이전</button>
+    <button id="nextBtn" class="next" onclick="nextStep()">다음</button>
+  `;
+  
+  renderStep();
+}
+
+
+/* * -----------------------------------------------------------------------
+ * 4. 초기화 및 시작
+ * -----------------------------------------------------------------------
+ */
+
+// 1. 상태 불러오기 시도
+loadState();
+
+// 2. 초기 로딩 시 현재 단계를 렌더링합니다.
+renderStep();
+
+</script>
 </body>
 </html>
